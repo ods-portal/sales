@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarClock, History } from 'lucide-react';
+import { CalendarClock, Flag, History } from 'lucide-react';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
 import { formatDate, formatDateTime, daysSince, isPastDate } from '@/lib/utils';
 
 const MIN_RESCHEDULE_REMARKS = 10;
+const MIN_FLAG_NOTE = 10;
 const RESCHEDULABLE_STATUSES = new Set(['Pending', 'Overdue']);
 
 function toDateInputValue(value: string | Date): string {
@@ -87,6 +88,10 @@ export default function VisitDetailPage() {
   const [rescheduleRemarks, setRescheduleRemarks] = useState('');
   const [rescheduleRemarksError, setRescheduleRemarksError] = useState('');
   const [rescheduling, setRescheduling] = useState(false);
+  const [showFlag, setShowFlag] = useState(false);
+  const [flagNote, setFlagNote] = useState('');
+  const [flagNoteError, setFlagNoteError] = useState('');
+  const [flagging, setFlagging] = useState(false);
 
   const loadVisit = useCallback(() => {
     return fetch(`/api/visits/${slug}`)
@@ -151,6 +156,68 @@ export default function VisitDetailPage() {
     }
   };
 
+  const openFlagModal = () => {
+    setFlagNote('');
+    setFlagNoteError('');
+    setShowFlag(true);
+  };
+
+  const handleFlag = async () => {
+    const note = flagNote.trim();
+    if (note.length < MIN_FLAG_NOTE) {
+      setFlagNoteError(`A note is required (minimum ${MIN_FLAG_NOTE} characters)`);
+      return;
+    }
+
+    setFlagging(true);
+    setFlagNoteError('');
+    try {
+      const res = await fetch(`/api/visits/${slug}/flag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagged: true, note }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        addToast(data.error || 'Failed to flag visit', 'error');
+        return;
+      }
+      setVisit(data.data);
+      setShowFlag(false);
+      addToast('Visit flagged', 'success');
+    } finally {
+      setFlagging(false);
+    }
+  };
+
+  const handleUnflag = async () => {
+    const ok = await confirm({
+      title: 'Remove flag',
+      message: 'Remove this flag? The sales person will no longer see it on the visit.',
+      confirmText: 'Remove flag',
+      danger: true,
+    });
+    if (!ok) return;
+
+    setFlagging(true);
+    try {
+      const res = await fetch(`/api/visits/${slug}/flag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagged: false }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        addToast(data.error || 'Failed to remove flag', 'error');
+        return;
+      }
+      setVisit(data.data);
+      addToast('Flag removed', 'success');
+    } finally {
+      setFlagging(false);
+    }
+  };
+
   const rescheduleHistory = (visit?.rescheduleHistory || []) as RescheduleHistoryEntry[];
   const sortedRescheduleHistory = [...rescheduleHistory].reverse();
 
@@ -196,6 +263,12 @@ export default function VisitDetailPage() {
               <span className={STATUS_BADGE[String(visit.status)] || 'badge badge-gray'}>
                 {String(visit.status)}
               </span>
+              {visit.isFlagged && (
+                <span className="badge badge-amber inline-flex items-center gap-1">
+                  <Flag className="h-3 w-3" />
+                  Flagged
+                </span>
+              )}
             </div>
             <div className="text-[15px] text-text-secondary flex items-center gap-3">
               <span>{formatDateTime(String(visit.visitDate))}</span>
@@ -223,6 +296,26 @@ export default function VisitDetailPage() {
                   Reschedule
                 </button>
               )}
+              {visit.isFlagged ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleUnflag}
+                  disabled={flagging}
+                >
+                  <Flag className="h-4 w-4" />
+                  {flagging ? 'Removing…' : 'Remove flag'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={openFlagModal}
+                >
+                  <Flag className="h-4 w-4" />
+                  Flag visit
+                </button>
+              )}
               <button 
                 className="btn btn-secondary btn-sm text-danger border-danger-light"
                 onClick={async () => {
@@ -244,6 +337,24 @@ export default function VisitDetailPage() {
         </div>
       </div>
 
+      {visit.isFlagged && (
+        <div className="card mb-4 border border-amber-200 bg-amber-50">
+          <h2 className="mb-2 flex items-center gap-2 text-base font-bold text-amber-800">
+            <Flag className="h-4 w-4" />
+            This visit is flagged
+          </h2>
+          <p className="m-0 whitespace-pre-wrap text-sm leading-relaxed text-amber-950">
+            {String(visit.flagNote || '')}
+          </p>
+          {visit.flaggedByName && (
+            <p className="mb-0 mt-2 text-xs text-amber-800">
+              Flagged by {String(visit.flaggedByName)}
+              {visit.flaggedAt ? ` on ${formatDateTime(String(visit.flaggedAt))}` : ''}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Details Split */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="card">
@@ -254,7 +365,7 @@ export default function VisitDetailPage() {
             </Link>
           </div>
           <div className="text-[13px] text-text-secondary">{doctor?.speciality as string}</div>
-          <div className="text-[13px] text-text-secondary">{doctor?.city as string}</div>
+          <div className="text-[13px] text-text-secondary">{(doctor?.area || doctor?.city) as string}</div>
         </div>
 
         <div className="card">
@@ -462,6 +573,65 @@ export default function VisitDetailPage() {
           </h2>
           <div className="text-sm text-danger whitespace-pre-wrap leading-normal">
             {String(visit.remarksBySalesManager)}
+          </div>
+        </div>
+      )}
+
+      {showFlag && (
+        <div className="modal-overlay" onClick={() => !flagging && setShowFlag(false)}>
+          <div className="modal" style={{ maxWidth: 560 }} onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900">
+                <Flag className="h-5 w-5 text-amber-600" />
+                Flag Visit
+              </div>
+              <p className="mb-6 text-sm text-slate-500">
+                Add a note the sales person will see on this visit.
+              </p>
+              <div className="mb-4">
+                <label className="input-label" htmlFor="flag-note">
+                  Note <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  id="flag-note"
+                  className={`input min-h-[100px] resize-y ${flagNoteError ? 'border-danger' : ''}`}
+                  placeholder="Why is this visit being flagged?"
+                  value={flagNote}
+                  onChange={(e) => {
+                    setFlagNote(e.target.value);
+                    if (flagNoteError) setFlagNoteError('');
+                  }}
+                  disabled={flagging}
+                  rows={4}
+                  autoFocus
+                />
+                {flagNoteError ? (
+                  <p className="mt-1 text-xs text-danger">{flagNoteError}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-text-muted">
+                    Minimum {MIN_FLAG_NOTE} characters required
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost flex-1"
+                  onClick={() => setShowFlag(false)}
+                  disabled={flagging}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary flex-1"
+                  onClick={handleFlag}
+                  disabled={flagging}
+                >
+                  {flagging ? 'Saving…' : 'Flag visit'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

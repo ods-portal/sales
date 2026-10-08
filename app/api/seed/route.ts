@@ -5,6 +5,7 @@ import Doctor from '@/models/Doctor';
 import Visit from '@/models/Visit';
 import Dropdown from '@/models/Dropdown';
 import AuditLog from '@/models/AuditLog';
+import { indianStateDropdowns } from '@/lib/indiaStates';
 import bcrypt from 'bcryptjs';
 import { subDays, subHours, addDays } from 'date-fns';
 
@@ -160,13 +161,32 @@ export async function POST() {
       { group: 'preferredCommunication', label: 'Call', value: 'Call', order: 1 },
       { group: 'preferredCommunication', label: 'WhatsApp', value: 'WhatsApp', order: 2 },
       { group: 'preferredCommunication', label: 'Email', value: 'Email', order: 3 },
+
+      { group: 'reasonForNotSwitching', label: 'Price', value: 'price', order: 1 },
+      { group: 'reasonForNotSwitching', label: 'Existing Contract', value: 'existing-contract', order: 2 },
+      { group: 'reasonForNotSwitching', label: 'Brand Loyalty', value: 'brand-loyalty', order: 3 },
+      { group: 'reasonForNotSwitching', label: 'Quality Concerns', value: 'quality-concerns', order: 4 },
+      { group: 'reasonForNotSwitching', label: 'Training & Support', value: 'training-support', order: 5 },
+      { group: 'reasonForNotSwitching', label: 'Relationship with Provider', value: 'relationship', order: 6 },
+      { group: 'reasonForNotSwitching', label: 'Other', value: 'other', order: 7 },
+
+      { group: 'city', label: 'Delhi', value: 'delhi', order: 1 },
+      { group: 'city', label: 'Mumbai', value: 'mumbai', order: 2 },
+      { group: 'city', label: 'Bangalore', value: 'bangalore', order: 3 },
+      { group: 'city', label: 'Hyderabad', value: 'hyderabad', order: 4 },
+      { group: 'city', label: 'Chennai', value: 'chennai', order: 5 },
+      { group: 'city', label: 'Kolkata', value: 'kolkata', order: 6 },
+      { group: 'city', label: 'Pune', value: 'pune', order: 7 },
+      { group: 'city', label: 'Ahmedabad', value: 'ahmedabad', order: 8 },
+
+      ...indianStateDropdowns(),
     ]);
 
     // ── DOCTORS ────────────────────────────────────────────────
     const doctorData = [
       {
         name: 'Dr. Ravi Mehta', speciality: 'orthodontist', category: 'A',
-        status: 'Active', city: 'Mumbai', state: 'Maharashtra',
+        status: 'Active', city: 'Mumbai', area: 'West Mumbai', state: 'Maharashtra',
         phone: '9876543210', email: 'ravi.mehta@clinic.com',
         assignedRep: sp1._id, clinicName: 'Smile Care Clinic',
         clinicAddress: 'Bandra West, Mumbai', 
@@ -179,7 +199,7 @@ export async function POST() {
       },
       {
         name: 'Dr. Anjali Singh', speciality: 'general-dentist', category: 'B',
-        status: 'Prospect', city: 'Delhi', state: 'Delhi',
+        status: 'Prospect', city: 'Delhi', area: 'South Delhi', state: 'Delhi',
         phone: '9876543211', email: 'anjali@dental.com', assignedRep: sp1._id,
         clinicName: 'Delhi Dental Centre', clinicAddress: 'South Extension',
         monthlyAlignerCases: 2,
@@ -189,15 +209,17 @@ export async function POST() {
       },
       {
         name: 'Dr. Suresh Kumar', speciality: 'pediatric-dentist', category: 'C',
-        status: 'Lost', city: 'Bangalore', state: 'Karnataka',
+        status: 'Lost', city: 'Bangalore', area: 'East Bangalore', state: 'Karnataka',
         phone: '9876543212', email: 'suresh@kidsdental.com', assignedRep: sp1._id,
         clinicName: 'Kids Dental Hub', clinicAddress: 'Indiranagar',
-        currentBrand: '3M', reasonForNotSwitching: 'Price too high',
+        currentBrand: '3M',
+        reasonForNotSwitching: 'Price',
+        reasonForNotSwitchingDetails: 'Price too high compared to our offer',
         decisionStage: 'Lost',
       },
       {
         name: 'Dr. Meena Reddy', speciality: 'orthodontist', category: 'A',
-        status: 'Active', city: 'Hyderabad', state: 'Telangana',
+        status: 'Active', city: 'Hyderabad', area: 'West Hyderabad', state: 'Telangana',
         phone: '9876543213', email: 'meena@ortho.com', assignedRep: sp2._id,
         clinicName: 'Perfect Smiles', clinicAddress: 'Jubilee Hills',
         currentAlignerBrands: ['Invisalign'], monthlyAlignerCases: 20,
@@ -206,7 +228,7 @@ export async function POST() {
       },
       {
         name: 'Dr. Prakash Iyer', speciality: 'general-dentist', category: 'B',
-        status: 'Prospect', city: 'Chennai', state: 'Tamil Nadu',
+        status: 'Prospect', city: 'Chennai', area: 'Central Chennai', state: 'Tamil Nadu',
         phone: '9876543214', email: 'prakash@chennaidental.com', assignedRep: sp2._id,
         clinicName: 'Chennai Dental', clinicAddress: 'T Nagar',
         decisionMaker: 'Manager', probabilityOfConversion: 30,

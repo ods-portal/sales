@@ -52,7 +52,7 @@ export async function runTodayVisitReminderCron(): Promise<CronJobResult> {
         { visitDate: { $gte: start, $lte: end } },
       ],
     })
-      .populate('doctor', 'name city')
+      .populate('doctor', 'name city area')
       .sort({ followUpDate: 1 })
       .lean();
 
@@ -72,10 +72,10 @@ export async function runTodayVisitReminderCron(): Promise<CronJobResult> {
       rep.name,
       todayLabel,
       visits.map((v) => {
-        const doctor = v.doctor as { name?: string; city?: string } | undefined;
+        const doctor = v.doctor as { name?: string; city?: string; area?: string } | undefined;
         return {
           doctorName: doctor?.name || 'Doctor',
-          doctorCity: doctor?.city || '—',
+          doctorCity: doctor?.area || doctor?.city || '—',
           visitType: v.visitType,
           followUpDate: formatISTDate(v.followUpDate),
           status: v.status,

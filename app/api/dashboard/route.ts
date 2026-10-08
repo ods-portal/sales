@@ -52,7 +52,7 @@ export async function GET() {
         status: 'Overdue',
       }),
       Visit.find(baseQuery)
-        .populate('doctor', 'name slug city speciality')
+        .populate('doctor', 'name slug city area speciality')
         .populate('salesPerson', 'name slug')
         .sort({ visitDate: -1 })
         .limit(10)
@@ -105,7 +105,7 @@ export async function GET() {
       followUpDate: { $lt: now },
       status: { $in: ['Pending', 'Overdue'] },
     })
-      .populate('doctor', 'name slug city')
+      .populate('doctor', 'name slug city area')
       .populate('salesPerson', 'name slug')
       .sort({ followUpDate: 1 })
       .limit(20)

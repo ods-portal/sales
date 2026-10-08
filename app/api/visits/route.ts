@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const [visits, total] = await Promise.all([
       Visit.find(query)
-        .populate('doctor', 'name slug speciality city category')
+        .populate('doctor', 'name slug speciality city area category')
         .populate('salesPerson', 'name slug')
         .sort(sortObj)
         .skip(skip)
@@ -57,10 +57,11 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       filtered = filtered.filter((v) => {
-        const doc = v.doctor as { name?: string; city?: string } | null;
+        const doc = v.doctor as { name?: string; city?: string; area?: string } | null;
         return (
           doc?.name?.toLowerCase().includes(search.toLowerCase()) ||
           doc?.city?.toLowerCase().includes(search.toLowerCase()) ||
+          doc?.area?.toLowerCase().includes(search.toLowerCase()) ||
           v.visitType.toLowerCase().includes(search.toLowerCase())
         );
       });
@@ -119,6 +120,28 @@ export async function POST(request: NextRequest) {
     })
       .populate('doctor', 'name city slug')
       .lean();
+
+    const duplicateDoctorVisit = sameDayVisits.find((existing) => {
+      const doc = existing.doctor as { _id?: unknown } | null;
+      return doc && String(doc._id) === String(newDoctor._id);
+    });
+
+    if (duplicateDoctorVisit) {
+      const conflictDoc = duplicateDoctorVisit.doctor as { name?: string; slug?: string };
+      return Response.json(
+        {
+          error: 'DUPLICATE_DOCTOR_VISIT',
+          message: `You already logged a visit for ${conflictDoc.name || 'this doctor'} on ${format(visitDate, 'dd MMM yyyy')}. A sales person cannot create two visits for the same doctor on the same day.`,
+          details: {
+            existingDoctor: conflictDoc.name,
+            existingVisitSlug: duplicateDoctorVisit.slug,
+            newDoctor: newDoctor.name,
+            visitDate: format(visitDate, 'yyyy-MM-dd'),
+          },
+        },
+        { status: 409 }
+      );
+    }
 
     const cityConflict = sameDayVisits.find((existing) => {
       const doc = existing.doctor as { city?: string } | null;

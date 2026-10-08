@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Filter, X, BarChart3, Download, FileText, CalendarRange } from 'lucide-react';
 import { useToast } from '@/components/ui/ToastProvider';
+import { areaOptionsForCity } from '@/lib/utils';
 import PageShell from '@/components/ui/PageShell';
 import PageHeader from '@/components/ui/PageHeader';
 import Card from '@/components/ui/Card';
@@ -15,6 +16,7 @@ interface FilterDoctor {
   id: string;
   name: string;
   city: string;
+  area?: string;
   speciality: string;
 }
 
@@ -43,6 +45,7 @@ interface ReportPreview {
     visitDate: string;
     doctorName: string;
     doctorCity: string;
+    doctorArea: string;
     doctorSpeciality: string;
     visitType: string;
     salesPerson: string;
@@ -89,8 +92,13 @@ export default function ReportsPage() {
   const [salesPersons, setSalesPersons] = useState<FilterSalesPerson[]>([]);
   const [doctorId, setDoctorId] = useState('');
   const [salesPersonId, setSalesPersonId] = useState('');
+  const [cities, setCities] = useState<string[]>([]);
+  const [city, setCity] = useState('');
+  const [area, setArea] = useState('');
   const [appliedDoctorId, setAppliedDoctorId] = useState('');
   const [appliedSalesPersonId, setAppliedSalesPersonId] = useState('');
+  const [appliedCity, setAppliedCity] = useState('');
+  const [appliedArea, setAppliedArea] = useState('');
   const [previewRange, setPreviewRange] = useState<ReportRange>('monthly');
   const [previewCustomFrom, setPreviewCustomFrom] = useState('');
   const [previewCustomTo, setPreviewCustomTo] = useState('');
@@ -102,7 +110,9 @@ export default function ReportsPage() {
     doctor = appliedDoctorId,
     rep = appliedSalesPersonId,
     from = appliedCustomFrom,
-    to = appliedCustomTo
+    to = appliedCustomTo,
+    selectedCity = appliedCity,
+    selectedArea = appliedArea
   ) => {
     const params = new URLSearchParams({ range });
     if (range === 'custom' && from && to) {
@@ -111,6 +121,8 @@ export default function ReportsPage() {
     }
     if (doctor) params.set('doctorId', doctor);
     if (rep) params.set('salesPersonId', rep);
+    if (selectedCity) params.set('city', selectedCity);
+    if (selectedArea) params.set('area', selectedArea);
     return params;
   };
 
@@ -119,7 +131,9 @@ export default function ReportsPage() {
     doctor = appliedDoctorId,
     rep = appliedSalesPersonId,
     from = appliedCustomFrom,
-    to = appliedCustomTo
+    to = appliedCustomTo,
+    selectedCity = appliedCity,
+    selectedArea = appliedArea
   ) => {
     if (range === 'custom' && (!from || !to)) {
       setPreviewRange('custom');
@@ -128,7 +142,7 @@ export default function ReportsPage() {
 
     setPreviewLoading(true);
     try {
-      const params = buildPreviewParams(range, doctor, rep, from, to);
+      const params = buildPreviewParams(range, doctor, rep, from, to, selectedCity, selectedArea);
       const res = await fetch(`/api/reports/preview?${params}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -204,6 +218,14 @@ export default function ReportsPage() {
             setSalesPersons(filters.salesPersons || []);
             setFiltersLoading(false);
           });
+        fetch('/api/dropdowns')
+          .then((r) => r.json())
+          .then((data) => {
+            const options = (data.grouped?.city || [])
+              .filter((item: { isActive: boolean }) => item.isActive)
+              .map((item: { label: string }) => item.label);
+            setCities(options);
+          });
         loadPreview('monthly');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -219,21 +241,30 @@ export default function ReportsPage() {
       const s = salesPersons.find((x) => x.id === appliedSalesPersonId);
       if (s) parts.push(`Sales Rep: ${s.name}`);
     }
+    if (appliedCity) parts.push(`City: ${appliedCity}`);
+    if (appliedArea) parts.push(`Area: ${appliedArea}`);
     return parts;
-  }, [appliedDoctorId, appliedSalesPersonId, doctors, salesPersons]);
+  }, [appliedDoctorId, appliedSalesPersonId, appliedCity, appliedArea, doctors, salesPersons]);
 
   const hasPendingFilters =
-    doctorId !== appliedDoctorId || salesPersonId !== appliedSalesPersonId;
+    doctorId !== appliedDoctorId ||
+    salesPersonId !== appliedSalesPersonId ||
+    city !== appliedCity ||
+    area !== appliedArea;
 
   const applyFilters = () => {
     setAppliedDoctorId(doctorId);
     setAppliedSalesPersonId(salesPersonId);
+    setAppliedCity(city);
+    setAppliedArea(area);
     loadPreview(
       previewRange,
       doctorId,
       salesPersonId,
       previewRange === 'custom' ? appliedCustomFrom : undefined,
-      previewRange === 'custom' ? appliedCustomTo : undefined
+      previewRange === 'custom' ? appliedCustomTo : undefined,
+      city,
+      area
     );
     addToast('Filters applied', 'success');
   };
@@ -241,14 +272,20 @@ export default function ReportsPage() {
   const clearFilters = () => {
     setDoctorId('');
     setSalesPersonId('');
+    setCity('');
+    setArea('');
     setAppliedDoctorId('');
     setAppliedSalesPersonId('');
+    setAppliedCity('');
+    setAppliedArea('');
     loadPreview(
       previewRange,
       '',
       '',
       previewRange === 'custom' ? appliedCustomFrom : undefined,
-      previewRange === 'custom' ? appliedCustomTo : undefined
+      previewRange === 'custom' ? appliedCustomTo : undefined,
+      '',
+      ''
     );
   };
 
@@ -260,6 +297,8 @@ export default function ReportsPage() {
     }
     if (appliedDoctorId) params.set('doctorId', appliedDoctorId);
     if (appliedSalesPersonId) params.set('salesPersonId', appliedSalesPersonId);
+    if (appliedCity) params.set('city', appliedCity);
+    if (appliedArea) params.set('area', appliedArea);
     return params;
   };
 
@@ -325,7 +364,7 @@ export default function ReportsPage() {
     <PageShell wide>
       <PageHeader
         title="Reports"
-        subtitle="Export performance reports with optional doctor and sales rep filters"
+        subtitle="Export performance reports with doctor, sales rep, city, and area filters"
         icon={<BarChart3 className="h-5 w-5" />}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -358,7 +397,7 @@ export default function ReportsPage() {
           <h3 className="text-base font-bold text-slate-900">Report Filters</h3>
         </div>
         <p className="mb-4 text-sm text-slate-500">
-          Filter by doctor or sales rep to update the preview and exports below.
+          Filter by doctor, sales rep, or city. Area options appear after a city is selected.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -373,7 +412,7 @@ export default function ReportsPage() {
               <option value="">All doctors</option>
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.name}{d.city ? ` · ${d.city}` : ''}
+                  {d.name}{(d.area || d.city) ? ` · ${d.area || d.city}` : ''}
                 </option>
               ))}
             </select>
@@ -392,6 +431,39 @@ export default function ReportsPage() {
               ))}
             </select>
           </div>
+          <div>
+            <label className="input-label" htmlFor="filter-city">City</label>
+            <select
+              id="filter-city"
+              className="input"
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setArea('');
+              }}
+            >
+              <option value="">All cities</option>
+              {cities.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          {city && (
+            <div>
+              <label className="input-label" htmlFor="filter-area">Area</label>
+              <select
+                id="filter-area"
+                className="input"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+              >
+                <option value="">All areas</option>
+                {areaOptionsForCity(city).map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex items-end gap-2">
             <button
               type="button"
@@ -401,7 +473,7 @@ export default function ReportsPage() {
             >
               Apply Filters
             </button>
-            {(appliedDoctorId || appliedSalesPersonId || doctorId || salesPersonId) && (
+            {(appliedDoctorId || appliedSalesPersonId || appliedCity || appliedArea || doctorId || salesPersonId || city || area) && (
               <button type="button" className="btn btn-ghost" onClick={clearFilters} title="Clear filters">
                 <X className="h-4 w-4" />
               </button>
@@ -639,7 +711,7 @@ export default function ReportsPage() {
                     <td className="py-2.5 pr-3 whitespace-nowrap">{visit.visitDate}</td>
                     <td className="py-2.5 pr-3">
                       <div className="font-medium text-slate-900">{visit.doctorName}</div>
-                      <div className="text-xs text-slate-500">{visit.doctorCity} · {visit.doctorSpeciality}</div>
+                      <div className="text-xs text-slate-500">{visit.doctorArea && visit.doctorArea !== '—' ? visit.doctorArea : visit.doctorCity} · {visit.doctorSpeciality}</div>
                     </td>
                     <td className="py-2.5 pr-3">{visit.visitType}</td>
                     <td className="py-2.5 pr-3">{visit.salesPerson}</td>
@@ -679,7 +751,7 @@ export default function ReportsPage() {
             <div className="font-bold text-base text-slate-900">Custom Range</div>
           </div>
           <p className="mb-5 text-sm leading-relaxed text-slate-500">
-            Pick any date range and apply doctor / sales rep filters before exporting.
+            Pick any date range. Active doctor, sales rep, city, and area filters are included.
           </p>
           <button
             type="button"

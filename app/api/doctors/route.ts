@@ -3,10 +3,56 @@ import { getAuthUser } from '@/lib/auth';
 import { generateUniqueSlug, paginationMeta } from '@/lib/utils';
 import { resolveAssignedRepsForDoctors, buildSalesPersonDoctorFilter } from '@/lib/resolveRep';
 import Doctor from '@/models/Doctor';
+import Dropdown from '@/models/Dropdown';
+import { isValidAreaForCity } from '@/lib/utils';
 import User from '@/models/User';
 import Visit from '@/models/Visit';
 import AuditLog from '@/models/AuditLog';
 import { NextRequest } from 'next/server';
+
+async function validateDoctorLocation(
+  body: Record<string, unknown>,
+  existingCity?: string,
+  existingState?: string
+) {
+  const city = String(body.city || '').trim();
+  const area = String(body.area || '').trim();
+  const state = String(body.state || '').trim();
+  if (!city) return 'Please select a city';
+
+  const options = await Dropdown.find({ group: 'city', isActive: true }).select('label').lean();
+  const labels = options.map((option) => option.label);
+  if (!labels.includes(city) && city !== existingCity) {
+    return 'Please select a city from the list';
+  }
+  if (!isValidAreaForCity(city, area)) {
+    return 'Please select an area for this city';
+  }
+
+  if (state) {
+    const stateOptions = await Dropdown.find({ group: 'state', isActive: true }).select('label').lean();
+    const stateLabels = stateOptions.map((option) => option.label);
+    if (!stateLabels.includes(state) && state !== existingState) {
+      return 'Please select a state from the list';
+    }
+  }
+
+  body.city = city;
+  body.area = area;
+  body.state = state;
+  return null;
+}
+
+function validateSwitchingReason(body: Record<string, unknown>) {
+  const reason = String(body.reasonForNotSwitching || '').trim();
+  const details = String(body.reasonForNotSwitchingDetails || '').trim();
+  if (reason && !details) {
+    return 'Please explain the reason for not switching';
+  }
+  body.reasonForNotSwitching = reason;
+  body.reasonForNotSwitchingDetails = reason ? details : '';
+  return null;
+}
 
 // Force model registration for populate() refs
 void User;
@@ -24,6 +70,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || '';
     const status = searchParams.get('status') || '';
     const city = searchParams.get('city') || '';
+    const area = searchParams.get('area') || '';
     const sort = searchParams.get('sort') || '-createdAt';
     const assignedRep = searchParams.get('assignedRep');
     const skip = (page - 1) * limit;
@@ -44,13 +91,15 @@ export async function GET(request: NextRequest) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { city: { $regex: search, $options: 'i' } },
+        { area: { $regex: search, $options: 'i' } },
         { speciality: { $regex: search, $options: 'i' } },
         { clinicName: { $regex: search, $options: 'i' } },
       ];
     }
     if (category) query.category = category;
     if (status) query.status = status;
-    if (city) query.city = { $regex: city, $options: 'i' };
+    if (city) query.city = city;
+    if (area) query.area = area;
 
     const sortObj: Record<string, 1 | -1> = {};
     if (sort.startsWith('-')) {
@@ -107,6 +156,12 @@ export async function POST(request: NextRequest) {
     } else if (!body.assignedRep) {
       return Response.json({ error: 'Assigned Sales Rep is required' }, { status: 400 });
     }
+
+    const locationError = await validateDoctorLocation(body);
+    if (locationError) return Response.json({ error: locationError }, { status: 400 });
+
+    const reasonError = validateSwitchingReason(body);
+    if (reasonError) return Response.json({ error: reasonError }, { status: 400 });
 
     // Clean up empty strings — don't store them as "" in the DB
     Object.keys(body).forEach(key => {

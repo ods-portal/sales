@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/components/ui/ToastProvider';
 import StepIndicator from '@/components/StepIndicator';
 import FileUploadWithProgress from '@/components/FileUploadWithProgress';
+import { areaOptionsForCity } from '@/lib/utils';
 
 const STEPS = [
   'Information',
@@ -85,11 +86,11 @@ export default function EditDoctorPage() {
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [form, setForm] = useState<Record<string, any>>({
-    name: '', phone: '', email: '', speciality: '', clinicName: '', clinicAddress: '', city: '', state: '', assignedRep: '',
+    name: '', phone: '', email: '', speciality: '', clinicName: '', clinicAddress: '', city: '', area: '', state: '', assignedRep: '',
     currentAlignerBrands: [], monthlyAlignerCases: '', otherOrthoSystems: [], decisionMaker: '',
     category: '', potentialRating: '', status: '',
     probabilityOfConversion: '', expectedFirstCaseDate: '', expectedMonthlyCaseVolume: '', estimatedMonthlyRevenuePotential: '',
-    currentBrand: '', currentPricing: '', doctorLikes: '', doctorPainPoints: '', reasonForNotSwitching: '',
+    currentBrand: '', currentPricing: '', doctorLikes: '', doctorPainPoints: '', reasonForNotSwitching: '', reasonForNotSwitchingDetails: '',
     doctorPhotoConsent: false, clinicPhotograph: '', doctorPhotograph: '', visitingCard: '', documents: [],
     doctorBirthday: '', clinicAnniversary: '', preferredCommunication: '', bestTimeToVisit: '', decisionStage: '',
   });
@@ -133,12 +134,12 @@ export default function EditDoctorPage() {
 
         setForm({
           name: doc.name || '', phone: doc.phone || '', email: doc.email || '', speciality: doc.speciality || '',
-          clinicName: doc.clinicName || '', clinicAddress: doc.clinicAddress || '', city: doc.city || '', state: doc.state || '', 
+          clinicName: doc.clinicName || '', clinicAddress: doc.clinicAddress || '', city: doc.city || '', area: doc.area || '', state: doc.state || '', 
           assignedRep: typeof doc.assignedRep === 'object' ? doc.assignedRep?._id : (doc.assignedRep || ''),
           currentAlignerBrands: doc.currentAlignerBrands || [], monthlyAlignerCases: doc.monthlyAlignerCases?.toString() || '', otherOrthoSystems: doc.otherOrthoSystems || [], decisionMaker: doc.decisionMaker || '',
           category: doc.category || '', potentialRating: doc.potentialRating || '', status: doc.status || '',
           probabilityOfConversion: doc.probabilityOfConversion?.toString() || '', expectedFirstCaseDate: formatDate(doc.expectedFirstCaseDate), expectedMonthlyCaseVolume: doc.expectedMonthlyCaseVolume?.toString() || '', estimatedMonthlyRevenuePotential: doc.estimatedMonthlyRevenuePotential?.toString() || '',
-          currentBrand: doc.currentBrand || '', currentPricing: doc.currentPricing?.toString() || '', doctorLikes: doc.doctorLikes || '', doctorPainPoints: doc.doctorPainPoints || '', reasonForNotSwitching: doc.reasonForNotSwitching || '',
+          currentBrand: doc.currentBrand || '', currentPricing: doc.currentPricing?.toString() || '', doctorLikes: doc.doctorLikes || '', doctorPainPoints: doc.doctorPainPoints || '', reasonForNotSwitching: doc.reasonForNotSwitching || '', reasonForNotSwitchingDetails: doc.reasonForNotSwitchingDetails || '',
           doctorPhotoConsent: doc.doctorPhotoConsent || false, clinicPhotograph: doc.clinicPhotograph || '', doctorPhotograph: doc.doctorPhotograph || '', visitingCard: doc.visitingCard || '', documents: doc.documents || [],
           doctorBirthday: formatDate(doc.doctorBirthday), clinicAnniversary: formatDate(doc.clinicAnniversary), preferredCommunication: doc.preferredCommunication || '', bestTimeToVisit: doc.bestTimeToVisit || '', decisionStage: doc.decisionStage || '',
         });
@@ -156,11 +157,57 @@ export default function EditDoctorPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const set = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
+  const cityOptions = (() => {
+    const options = getOptions('city');
+    if (form.city && !options.includes(form.city)) return [form.city, ...options];
+    return options;
+  })();
+  const areaOptions = areaOptionsForCity(form.city);
+  const stateOptions = (() => {
+    const options = getOptions('state');
+    if (form.state && !options.includes(form.state)) return [form.state, ...options];
+    return options;
+  })();
+
+  const hasCityArea = () => {
+    if (!form.city) {
+      addToast('Please select a city', 'error');
+      return false;
+    }
+    if (!form.area) {
+      addToast('Please select an area', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const reasonOptions = (() => {
+    const options = getOptions('reasonForNotSwitching');
+    if (form.reasonForNotSwitching && !options.includes(form.reasonForNotSwitching)) {
+      return [form.reasonForNotSwitching, ...options];
+    }
+    return options;
+  })();
+
+  const hasSwitchingReasonDetails = () => {
+    if (!form.reasonForNotSwitching) return true;
+    if (String(form.reasonForNotSwitchingDetails || '').trim()) return true;
+    addToast('Please explain the reason for not switching. It is required once a reason is selected.', 'error');
+    return false;
+  };
+
+  const handleNext = () => {
+    if (step === 0 && !hasCityArea()) return;
+    if (step === 4 && !hasSwitchingReasonDetails()) return;
+    setStep(step + 1);
+  };
+
   const handleSubmit = async () => {
     if (!form.name || !form.phone || !form.email || !form.clinicAddress || !form.category) {
       addToast('Please fill all mandatory fields (Name, Phone, Email, Address, Category)', 'error');
       return;
     }
+    if (!hasCityArea() || !hasSwitchingReasonDetails()) return;
 
     if (!/^\d{10}$/.test(form.phone)) {
       addToast('Phone number must be exactly 10 digits', 'error');
@@ -245,8 +292,32 @@ export default function EditDoctorPage() {
               </div>
             )}
             
-            <Field label="City" id="city" value={form.city} onChange={(e) => set('city', e.target.value)} />
-            <Field label="State" id="state" value={form.state} onChange={(e) => set('state', e.target.value)} />
+            <SelectField
+              label="City *"
+              id="city"
+              options={cityOptions}
+              value={form.city}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm((prev) => ({ ...prev, city: value, area: '' }));
+              }}
+            />
+            {form.city && (
+              <SelectField
+                label="Area *"
+                id="area"
+                options={areaOptions}
+                value={form.area}
+                onChange={(e) => set('area', e.target.value)}
+              />
+            )}
+            <SelectField
+              label="State"
+              id="state"
+              options={stateOptions}
+              value={form.state}
+              onChange={(e) => set('state', e.target.value)}
+            />
             
             <div className="col-span-full">
               <TextArea label="Clinic Address *" id="clinicAddress" value={form.clinicAddress} onChange={(e) => set('clinicAddress', e.target.value)} required />
@@ -317,9 +388,33 @@ export default function EditDoctorPage() {
               <TextArea label="Doctor's Pain Points" id="pain" value={form.doctorPainPoints} onChange={(e) => set('doctorPainPoints', e.target.value)} />
             </div>
             
-            {form.currentBrand && (
+            <div className="col-span-full">
+              <SelectField
+                label="Reason for Not Switching"
+                id="reasonNotSwitch"
+                options={reasonOptions}
+                value={form.reasonForNotSwitching}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    reasonForNotSwitching: value,
+                    reasonForNotSwitchingDetails: value ? prev.reasonForNotSwitchingDetails : '',
+                  }));
+                }}
+              />
+            </div>
+            {form.reasonForNotSwitching && (
               <div className="col-span-full">
-                <TextArea label="Reason for Not Switching" id="reasonNotSwitch" value={form.reasonForNotSwitching} onChange={(e) => set('reasonForNotSwitching', e.target.value)} />
+                <TextArea
+                  label="Explain this reason *"
+                  id="reasonNotSwitchDetails"
+                  value={form.reasonForNotSwitchingDetails}
+                  onChange={(e) => set('reasonForNotSwitchingDetails', e.target.value)}
+                  placeholder="Write why the doctor is not switching"
+                  required
+                  autoFocus
+                />
               </div>
             )}
           </div>
@@ -407,7 +502,7 @@ export default function EditDoctorPage() {
           ) : <div />}
           
           {step < STEPS.length - 1 ? (
-            <button className="btn btn-primary" onClick={() => setStep(step + 1)}>Next Step</button>
+            <button className="btn btn-primary" onClick={handleNext}>Next Step</button>
           ) : (
             <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
               {submitting ? 'Saving...' : 'Save Doctor Profile'}

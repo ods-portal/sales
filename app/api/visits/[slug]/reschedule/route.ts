@@ -121,7 +121,7 @@ export async function POST(
     });
 
     const updated = await Visit.findOne({ slug })
-      .populate('doctor', 'name slug speciality city category status')
+      .populate('doctor', 'name slug speciality city area category status')
       .populate('salesPerson', 'name email slug')
       .lean();
 

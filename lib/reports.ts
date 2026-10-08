@@ -20,11 +20,15 @@ export type ReportRange = 'daily' | 'weekly' | 'monthly' | 'custom';
 export interface ReportFilters {
   doctorId?: string;
   salesPersonId?: string;
+  city?: string;
+  area?: string;
 }
 
 export interface ReportFilterLabels {
   doctorName?: string;
   salesPersonName?: string;
+  city?: string;
+  area?: string;
 }
 
 export interface ReportPeriod {
@@ -38,6 +42,7 @@ export interface ReportVisitRow {
   visitDate: string;
   doctorName: string;
   doctorCity: string;
+  doctorArea: string;
   doctorSpeciality: string;
   visitType: string;
   salesPerson: string;
@@ -57,6 +62,7 @@ export interface ReportDoctorRow {
   clinicName: string;
   clinicAddress: string;
   city: string;
+  area: string;
   state: string;
   assignedRep: string;
   category: string;
@@ -76,6 +82,7 @@ export interface ReportDoctorRow {
   doctorLikes: string;
   doctorPainPoints: string;
   reasonForNotSwitching: string;
+  reasonForNotSwitchingDetails: string;
   doctorBirthday: string;
   clinicAnniversary: string;
   preferredCommunication: string;
@@ -101,6 +108,7 @@ export interface ReportVisitFullRow {
   doctorName: string;
   doctorSlug: string;
   doctorCity: string;
+  doctorArea: string;
   salesPerson: string;
   salesPersonEmail: string;
   meetingSummary: string;
@@ -280,6 +288,7 @@ function mapDoctorRow(
     clinicName: str(d.clinicName),
     clinicAddress: str(d.clinicAddress),
     city: str(d.city),
+    area: str(d.area),
     state: str(d.state),
     assignedRep: (d.assignedRep as { name?: string })?.name || '—',
     category: str(d.category),
@@ -299,6 +308,7 @@ function mapDoctorRow(
     doctorLikes: str(d.doctorLikes),
     doctorPainPoints: str(d.doctorPainPoints),
     reasonForNotSwitching: str(d.reasonForNotSwitching),
+    reasonForNotSwitchingDetails: str(d.reasonForNotSwitchingDetails),
     doctorBirthday: fmtDate(d.doctorBirthday as Date),
     clinicAnniversary: fmtDate(d.clinicAnniversary as Date),
     preferredCommunication: str(d.preferredCommunication),
@@ -315,7 +325,7 @@ function mapDoctorRow(
 }
 
 function mapVisitFullRow(v: Record<string, unknown>): ReportVisitFullRow {
-  const doctor = v.doctor as { name?: string; slug?: string; city?: string } | undefined;
+  const doctor = v.doctor as { name?: string; slug?: string; city?: string; area?: string } | undefined;
   const rep = v.salesPerson as { name?: string; email?: string } | undefined;
   return {
     slug: str(v.slug),
@@ -328,6 +338,7 @@ function mapVisitFullRow(v: Record<string, unknown>): ReportVisitFullRow {
     doctorName: doctor?.name || '—',
     doctorSlug: doctor?.slug || '—',
     doctorCity: doctor?.city || '—',
+    doctorArea: doctor?.area || '—',
     salesPerson: rep?.name || '—',
     salesPersonEmail: rep?.email || '—',
     meetingSummary: str(v.meetingSummary),
@@ -361,16 +372,28 @@ function buildDoctorMatch(
   filters: ReportFilters = {}
 ): Record<string, unknown> {
   const match: Record<string, unknown> = {};
-  if (filters.doctorId) {
-    match._id = new mongoose.Types.ObjectId(filters.doctorId);
-    return match;
+  if (filters.doctorId) match._id = new mongoose.Types.ObjectId(filters.doctorId);
+  if (filters.salesPersonId) match.assignedRep = new mongoose.Types.ObjectId(filters.salesPersonId);
+  if (filters.city) match.city = filters.city;
+  if (filters.area) match.area = filters.area;
+  if (!filters.doctorId && !filters.salesPersonId && !filters.city && !filters.area) {
+    match.createdAt = { $gte: period.start, $lte: period.end };
   }
-  if (filters.salesPersonId) {
-    match.assignedRep = new mongoose.Types.ObjectId(filters.salesPersonId);
-    return match;
-  }
-  match.createdAt = { $gte: period.start, $lte: period.end };
   return match;
+}
+
+async function applyLocationFilter(match: Record<string, unknown>, filters: ReportFilters) {
+  if (!filters.city && !filters.area) return;
+  const doctorQuery: Record<string, string> = {};
+  if (filters.city) doctorQuery.city = filters.city;
+  if (filters.area) doctorQuery.area = filters.area;
+  const ids = await Doctor.find(doctorQuery).distinct('_id');
+  if (filters.doctorId) {
+    const allowed = ids.some((id) => String(id) === filters.doctorId);
+    match.doctor = allowed ? new mongoose.Types.ObjectId(filters.doctorId) : { $in: [] };
+    return;
+  }
+  match.doctor = { $in: ids };
 }
 
 function buildVisitMatch(
@@ -401,6 +424,8 @@ async function resolveFilterLabels(
     const rep = await User.findById(filters.salesPersonId).select('name').lean();
     if (rep) labels.salesPersonName = rep.name;
   }
+  if (filters.city) labels.city = filters.city;
+  if (filters.area) labels.area = filters.area;
   return labels;
 }
 
@@ -408,6 +433,8 @@ function buildFiltersLabel(labels: ReportFilterLabels): string | undefined {
   const parts: string[] = [];
   if (labels.doctorName) parts.push(`Doctor: ${labels.doctorName}`);
   if (labels.salesPersonName) parts.push(`Sales Rep: ${labels.salesPersonName}`);
+  if (labels.city) parts.push(`City: ${labels.city}`);
+  if (labels.area) parts.push(`Area: ${labels.area}`);
   return parts.length > 0 ? parts.join(' · ') : undefined;
 }
 
@@ -421,6 +448,7 @@ export async function fetchReportData(
   await connectDB();
   const period = resolveReportPeriod(range, from, to);
   const visitMatch = buildVisitMatch(period, filters);
+  await applyLocationFilter(visitMatch, filters);
   const filterLabels = await resolveFilterLabels(filters);
   const filtersLabel = buildFiltersLabel(filterLabels);
 
@@ -460,6 +488,8 @@ export async function fetchReportData(
 
   const newDoctorsQuery: Record<string, unknown> = { createdAt: { $gte: period.start, $lte: period.end } };
   if (filters.doctorId) newDoctorsQuery._id = new mongoose.Types.ObjectId(filters.doctorId);
+  if (filters.city) newDoctorsQuery.city = filters.city;
+  if (filters.area) newDoctorsQuery.area = filters.area;
   const newDoctors = filters.salesPersonId
     ? 0
     : await Doctor.countDocuments(newDoctorsQuery);
@@ -514,6 +544,7 @@ export async function fetchReportData(
     visitDate: format(new Date(v.visitDate), 'yyyy-MM-dd'),
     doctorName: (v.doctor as { name?: string })?.name || '—',
     doctorCity: (v.doctor as { city?: string })?.city || '—',
+    doctorArea: (v.doctor as { area?: string })?.area || '—',
     doctorSpeciality: (v.doctor as { speciality?: string })?.speciality || '—',
     visitType: v.visitType,
     salesPerson: (v.salesPerson as { name?: string })?.name || '—',
@@ -586,6 +617,7 @@ const DOCTOR_CSV_COLUMNS: { key: keyof ReportDoctorRow; label: string }[] = [
   { key: 'clinicName', label: 'Clinic Name' },
   { key: 'clinicAddress', label: 'Clinic Address' },
   { key: 'city', label: 'City' },
+  { key: 'area', label: 'Area' },
   { key: 'state', label: 'State' },
   { key: 'assignedRep', label: 'Assigned Rep' },
   { key: 'category', label: 'Category' },
@@ -605,6 +637,7 @@ const DOCTOR_CSV_COLUMNS: { key: keyof ReportDoctorRow; label: string }[] = [
   { key: 'doctorLikes', label: 'Doctor Likes' },
   { key: 'doctorPainPoints', label: 'Doctor Pain Points' },
   { key: 'reasonForNotSwitching', label: 'Reason For Not Switching' },
+  { key: 'reasonForNotSwitchingDetails', label: 'Reason For Not Switching Details' },
   { key: 'doctorBirthday', label: 'Doctor Birthday' },
   { key: 'clinicAnniversary', label: 'Clinic Anniversary' },
   { key: 'preferredCommunication', label: 'Preferred Communication' },
@@ -630,6 +663,7 @@ const VISIT_FULL_CSV_COLUMNS: { key: keyof ReportVisitFullRow; label: string }[]
   { key: 'doctorName', label: 'Doctor Name' },
   { key: 'doctorSlug', label: 'Doctor Slug' },
   { key: 'doctorCity', label: 'Doctor City' },
+  { key: 'doctorArea', label: 'Doctor Area' },
   { key: 'salesPerson', label: 'Sales Person' },
   { key: 'salesPersonEmail', label: 'Sales Person Email' },
   { key: 'meetingSummary', label: 'Meeting Summary' },
@@ -691,12 +725,13 @@ export function generateReportCsv(data: ReportData): string {
     ),
     '',
     'Visit Summary',
-    'Date,Doctor,City,Speciality,Type,Sales Rep,Status,Follow-up,Mode,Rating',
+    'Date,Doctor,City,Area,Speciality,Type,Sales Rep,Status,Follow-up,Mode,Rating',
     ...data.visits.map((v) =>
       [
         v.visitDate,
         escapeCsv(v.doctorName),
         escapeCsv(v.doctorCity),
+        escapeCsv(v.doctorArea),
         escapeCsv(v.doctorSpeciality),
         escapeCsv(v.visitType),
         escapeCsv(v.salesPerson),
@@ -808,7 +843,7 @@ export function generateReportHtml(data: ReportData): string {
       (v) => `
       <tr>
         <td>${v.visitDate}</td>
-        <td><strong>${v.doctorName}</strong><br><span class="muted">${v.doctorCity} · ${v.doctorSpeciality}</span></td>
+        <td><strong>${v.doctorName}</strong><br><span class="muted">${v.doctorArea && v.doctorArea !== '—' ? v.doctorArea : v.doctorCity} · ${v.doctorSpeciality}</span></td>
         <td>${v.visitType}</td>
         <td>${v.salesPerson}</td>
         <td><span class="badge" style="color:${statusColor(v.status)};background:${statusBg(v.status)}">${v.status}</span></td>

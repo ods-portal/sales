@@ -16,12 +16,14 @@ export async function GET(request: NextRequest) {
     const to = searchParams.get('to') || undefined;
     const doctorId = searchParams.get('doctorId') || undefined;
     const salesPersonId = searchParams.get('salesPersonId') || undefined;
+    const city = searchParams.get('city') || undefined;
+    const area = searchParams.get('area') || undefined;
 
     if (!['daily', 'weekly', 'monthly', 'custom'].includes(range)) {
       return Response.json({ error: 'Invalid range.' }, { status: 400 });
     }
 
-    const filters = { doctorId, salesPersonId };
+    const filters = { doctorId, salesPersonId, city, area };
     const data = await fetchReportData(range, user.name, from, to, filters);
 
     return Response.json({

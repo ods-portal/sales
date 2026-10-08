@@ -54,6 +54,11 @@ export interface IVisit extends Document {
 
   status: 'Completed' | 'Pending' | 'Overdue' | 'Cancelled';
   statusUpdatedAt?: Date;
+  isFlagged: boolean;
+  flagNote?: string;
+  flaggedAt?: Date;
+  flaggedBy?: Types.ObjectId;
+  flaggedByName?: string;
   rescheduleHistory: IRescheduleHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -110,6 +115,11 @@ const VisitSchema = new Schema<IVisit>(
       default: 'Pending',
     },
     statusUpdatedAt: { type: Date },
+    isFlagged: { type: Boolean, default: false },
+    flagNote: { type: String, trim: true },
+    flaggedAt: { type: Date },
+    flaggedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    flaggedByName: { type: String },
     rescheduleHistory: {
       type: [
         {
@@ -135,7 +145,12 @@ VisitSchema.index({ doctor: 1 });
 VisitSchema.index({ salesPerson: 1 });
 VisitSchema.index({ visitDate: -1 });
 VisitSchema.index({ status: 1 });
+VisitSchema.index({ isFlagged: 1 });
 VisitSchema.index({ followUpDate: 1 });
+
+if (mongoose.models.Visit && !mongoose.models.Visit.schema.path('isFlagged')) {
+  mongoose.deleteModel('Visit');
+}
 
 const Visit: Model<IVisit> =
   mongoose.models.Visit || mongoose.model<IVisit>('Visit', VisitSchema);

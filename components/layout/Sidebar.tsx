@@ -23,6 +23,7 @@ import {
   Search,
   Activity,
   Timer,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -86,7 +87,6 @@ const NAV: NavSection[] = [
   },
   {
     title: 'Configuration',
-    roles: ['admin', 'superAdmin'],
     items: [
       { label: 'Dropdown Manager', href: '/dropdowns', icon: Settings2 },
       { label: 'Cron Jobs', href: '/admin/crons', icon: Timer, requireWrite: true },
@@ -97,6 +97,7 @@ const NAV: NavSection[] = [
     roles: ['admin', 'superAdmin'],
     items: [
       { label: 'Manage Users', href: '/users', icon: Users, requireWrite: true },
+      { label: 'Transfer Sales Data', href: '/users/transfer', icon: ArrowRightLeft, requireWrite: true },
       { label: 'Audit Trail', href: '/audit', icon: Shield, roles: ['superAdmin'] },
     ],
   },

@@ -112,7 +112,7 @@ export default function DoctorDetailPage() {
               {doctor.status && <span className={STATUS_BADGE[String(doctor.status)] || 'badge badge-gray'}>{String(doctor.status)}</span>}
             </div>
             <div className="text-sm text-text-secondary mt-1">
-              {doctor.speciality} · {doctor.city}{doctor.state ? `, ${doctor.state}` : ''}
+              {doctor.speciality} · {doctor.area || doctor.city}{doctor.state ? `, ${doctor.state}` : ''}
             </div>
             <div className="flex gap-4 mt-3 flex-wrap">
               {Boolean(doctor.phone) && <a href={`tel:${doctor.phone}`} className="text-[13px] text-brand no-underline">📞 {String(doctor.phone)}</a>}
@@ -181,6 +181,7 @@ export default function DoctorDetailPage() {
               <InfoRow label="Clinic Name" value={doctor.clinicName} />
               <InfoRow label="Clinic Address" value={doctor.clinicAddress} />
               <InfoRow label="City" value={doctor.city} />
+              <InfoRow label="Area" value={doctor.area} />
               <InfoRow label="State" value={doctor.state} />
               <InfoRow label="Assigned Rep" value={doctor.assignedRep?.name} />
             </div>
@@ -219,6 +220,7 @@ export default function DoctorDetailPage() {
               <InfoRow label="Doctor's Likes" value={doctor.doctorLikes} />
               <InfoRow label="Doctor's Pain Points" value={doctor.doctorPainPoints} />
               <InfoRow label="Reason for Not Switching" value={doctor.reasonForNotSwitching} />
+              <InfoRow label="Reason Details" value={doctor.reasonForNotSwitchingDetails} />
             </div>
           )}
 
@@ -307,11 +309,18 @@ export default function DoctorDetailPage() {
                             <div className="font-semibold text-sm">{String(visit.visitType)} Visit</div>
                             <div className="text-xs text-text-muted">{formatDate(String(visit.visitDate))}</div>
                           </div>
-                          <span className={
-                            String(visit.status) === 'Completed' ? 'badge badge-green' :
-                            String(visit.status) === 'Pending' ? 'badge badge-amber' :
-                            'badge badge-red'
-                          }>{String(visit.status)}</span>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <span className={
+                              String(visit.status) === 'Completed' ? 'badge badge-green' :
+                              String(visit.status) === 'Pending' ? 'badge badge-amber' :
+                              'badge badge-red'
+                            }>{String(visit.status)}</span>
+                            {visit.isFlagged && (
+                              <span className="badge badge-amber" title={String(visit.flagNote || 'Flagged')}>
+                                Flagged
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </Link>
                     );

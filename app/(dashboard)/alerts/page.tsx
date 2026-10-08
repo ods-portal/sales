@@ -14,7 +14,7 @@ interface OverdueVisit {
   slug: string;
   followUpDate: string;
   visitDate: string;
-  doctor: { name: string; slug: string; city: string };
+  doctor: { name: string; slug: string; city: string; area?: string };
   salesPerson: { name: string; slug: string };
   visitType: string;
 }
@@ -83,7 +83,7 @@ export default function AlertsPage() {
                         </Badge>
                       </div>
                       <div className="mt-0.5 text-[13px] text-slate-600">
-                        {v.doctor?.city} · {v.visitType} · Rep: {v.salesPerson?.name || 'Unknown'}
+                        {v.doctor?.area || v.doctor?.city} · {v.visitType} · Rep: {v.salesPerson?.name || 'Unknown'}
                       </div>
                       <div className="mt-0.5 text-xs text-slate-400">
                         Due: {formatDate(v.followUpDate)} · Visit: {formatDate(v.visitDate)}

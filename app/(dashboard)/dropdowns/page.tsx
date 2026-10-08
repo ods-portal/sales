@@ -30,6 +30,9 @@ const GROUP_LABELS: Record<string, string> = {
   potentialRating: 'Potential Rating',
   decisionStage: 'Decision Stage',
   preferredCommunication: 'Preferred Communication',
+  reasonForNotSwitching: 'Reason for Not Switching',
+  city: 'Cities',
+  state: 'States',
 };
 
 export default function DropdownsPage() {
@@ -41,6 +44,10 @@ export default function DropdownsPage() {
   const [newLabel, setNewLabel] = useState('');
   const [newValue, setNewValue] = useState('');
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editValue, setEditValue] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -69,7 +76,7 @@ export default function DropdownsPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const canEdit = currentUser?.role === 'superAdmin' || (currentUser?.role === 'admin' && currentUser?.hasWriteAccess);
+  const canEdit = Boolean(currentUser);
 
   const handleAdd = async () => {
     if (!newLabel || !newValue || !activeGroup) return;
@@ -88,6 +95,37 @@ export default function DropdownsPage() {
       addToast(d.error || 'Failed to add option', 'error');
     }
     setAdding(false);
+  };
+
+  const startEdit = (item: DropdownItem) => {
+    setEditingId(item._id);
+    setEditLabel(item.label);
+    setEditValue(item.value);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditLabel('');
+    setEditValue('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editLabel.trim() || !editValue.trim()) return;
+    setSavingEdit(true);
+    const res = await fetch('/api/dropdowns', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editingId, label: editLabel.trim(), value: editValue.trim() }),
+    });
+    if (res.ok) {
+      addToast('Option updated', 'success');
+      cancelEdit();
+      fetchDropdowns();
+    } else {
+      const data = await res.json();
+      addToast(data.error || 'Failed to update option', 'error');
+    }
+    setSavingEdit(false);
   };
 
   const handleDelete = async (id: string, label: string) => {
@@ -116,14 +154,14 @@ export default function DropdownsPage() {
       {loading ? (
         <div className="card"><div className="skeleton h-[300px]" /></div>
       ) : (
-        <div className="grid grid-cols-[260px_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           
           <div className="card p-3">
             <div className="text-[12px] font-bold text-text-muted uppercase tracking-[0.5px] mb-2 px-1">Groups</div>
             {Object.keys(grouped).map((g) => (
               <button
                 key={g}
-                onClick={() => setActiveGroup(g)}
+                onClick={() => { setActiveGroup(g); cancelEdit(); }}
                 className={`flex items-center justify-between w-full py-2.5 px-3 rounded-lg border-none text-[13px] text-left transition-all mb-0.5 cursor-pointer ${activeGroup === g ? 'bg-brand-light text-brand font-semibold' : 'bg-transparent text-text-primary font-normal'}`}
               >
                 <span>{GROUP_LABELS[g] || g}</span>
@@ -171,24 +209,64 @@ export default function DropdownsPage() {
 
               {/* Items */}
               <div className="flex flex-col gap-1.5">
-                {currentItems.map((item) => (
-                  <div
-                    key={item._id}
-                    className={`flex items-center gap-3 py-3 px-3.5 rounded-xl border border-border ${item.isSystem ? 'bg-bg-secondary' : 'bg-white'}`}
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-[14px]">{item.label}</div>
-                      <div className="text-[12px] text-text-muted font-mono">{item.value}</div>
+                {currentItems.map((item) => {
+                  const isEditing = editingId === item._id;
+                  return (
+                    <div
+                      key={item._id}
+                      className={`flex flex-wrap items-center gap-3 py-3 px-3.5 rounded-xl border border-border ${item.isSystem ? 'bg-bg-secondary' : 'bg-white'}`}
+                    >
+                      {isEditing ? (
+                        <>
+                          <input
+                            className="input min-w-[140px] flex-1"
+                            value={editLabel}
+                            onChange={(e) => setEditLabel(e.target.value)}
+                            aria-label="Edit label"
+                          />
+                          <input
+                            className="input min-w-[140px] flex-1"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            aria-label="Edit value"
+                          />
+                          <div className="flex shrink-0 gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={handleSaveEdit}
+                              disabled={savingEdit || !editLabel.trim() || !editValue.trim()}
+                            >
+                              {savingEdit ? 'Saving…' : 'Save'}
+                            </button>
+                            <button type="button" className="btn btn-secondary btn-sm" onClick={cancelEdit}>
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-[14px]">{item.label}</div>
+                            <div className="text-[12px] text-text-muted font-mono">{item.value}</div>
+                          </div>
+                          {item.isSystem ? (
+                            <span className="badge badge-gray shrink-0" title="System defaults cannot be modified">🔒 System Default</span>
+                          ) : canEdit && (
+                            <div className="flex shrink-0 gap-2">
+                              <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEdit(item)}>
+                                Edit
+                              </button>
+                              <button type="button" className="btn btn-ghost btn-sm text-danger" onClick={() => handleDelete(item._id, item.label)}>
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                    {item.isSystem ? (
-                      <span className="badge badge-gray" title="System defaults cannot be modified">🔒 System Default</span>
-                    ) : canEdit && (
-                      <div className="flex gap-1">
-                        <button className="btn btn-ghost btn-sm text-danger" onClick={() => handleDelete(item._id, item.label)} title="Delete">🗑</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

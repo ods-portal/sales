@@ -60,6 +60,18 @@ export function isPastDate(date: Date | string): boolean {
   return d.getTime() < today.getTime();
 }
 
+export const AREA_DIRECTIONS = ['North', 'South', 'East', 'West', 'Central'] as const;
+
+export function areaOptionsForCity(city: string): string[] {
+  const name = city.trim();
+  if (!name) return [];
+  return AREA_DIRECTIONS.map((direction) => `${direction} ${name}`);
+}
+
+export function isValidAreaForCity(city: string, area: string): boolean {
+  return areaOptionsForCity(city).includes(area.trim());
+}
+
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
 }

@@ -21,7 +21,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import Card from '@/components/ui/Card';
 import StepIndicator from '@/components/StepIndicator';
 import FileUploadWithProgress from '@/components/FileUploadWithProgress';
-import { cn } from '@/lib/utils';
+import { areaOptionsForCity, cn } from '@/lib/utils';
 
 const STEPS = [
   'Information',
@@ -352,6 +352,7 @@ export default function AddDoctorPage() {
     clinicName: '',
     clinicAddress: '',
     city: '',
+    area: '',
     state: '',
     assignedRep: '',
     currentAlignerBrands: [],
@@ -370,6 +371,7 @@ export default function AddDoctorPage() {
     doctorLikes: '',
     doctorPainPoints: '',
     reasonForNotSwitching: '',
+    reasonForNotSwitchingDetails: '',
     doctorPhotoConsent: false,
     clinicPhotograph: '',
     doctorPhotograph: '',
@@ -385,11 +387,57 @@ export default function AddDoctorPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const set = (field: string, value: any) => setForm((prev) => ({ ...prev, [field]: value }));
 
+  const cityOptions = (() => {
+    const options = getOptions('city');
+    if (form.city && !options.includes(form.city)) return [form.city, ...options];
+    return options;
+  })();
+  const areaOptions = areaOptionsForCity(form.city);
+  const stateOptions = (() => {
+    const options = getOptions('state');
+    if (form.state && !options.includes(form.state)) return [form.state, ...options];
+    return options;
+  })();
+
+  const hasCityArea = () => {
+    if (!form.city) {
+      addToast('Please select a city', 'error');
+      return false;
+    }
+    if (!form.area) {
+      addToast('Please select an area', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const reasonOptions = (() => {
+    const options = getOptions('reasonForNotSwitching');
+    if (form.reasonForNotSwitching && !options.includes(form.reasonForNotSwitching)) {
+      return [form.reasonForNotSwitching, ...options];
+    }
+    return options;
+  })();
+
+  const hasSwitchingReasonDetails = () => {
+    if (!form.reasonForNotSwitching) return true;
+    if (String(form.reasonForNotSwitchingDetails || '').trim()) return true;
+    addToast('Please explain the reason for not switching. It is required once a reason is selected.', 'error');
+    return false;
+  };
+
+  const handleNext = () => {
+    if (step === 0 && !hasCityArea()) return;
+    if (step === 4 && !hasSwitchingReasonDetails()) return;
+    setStep(step + 1);
+  };
+
   const handleSubmit = async () => {
     if (!form.name || !form.phone || !form.email || !form.clinicAddress || !form.category) {
       addToast('Please fill all mandatory fields (Name, Phone, Email, Address, Category)', 'error');
       return;
     }
+    if (!hasCityArea() || !hasSwitchingReasonDetails()) return;
 
     if (!/^\d{10}$/.test(form.phone)) {
       addToast('Phone number must be exactly 10 digits', 'error');
@@ -513,17 +561,31 @@ export default function AddDoctorPage() {
                     className="md:col-span-2"
                   />
                 )}
-                <FormField
+                <FormSelect
                   label="City"
                   id="city"
-                  placeholder="Mumbai"
+                  options={cityOptions}
                   value={form.city}
-                  onChange={(e) => set('city', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) => ({ ...prev, city: value, area: '' }));
+                  }}
+                  required
                 />
-                <FormField
+                {form.city && (
+                  <FormSelect
+                    label="Area"
+                    id="area"
+                    options={areaOptions}
+                    value={form.area}
+                    onChange={(e) => set('area', e.target.value)}
+                    required
+                  />
+                )}
+                <FormSelect
                   label="State"
                   id="state"
-                  placeholder="Maharashtra"
+                  options={stateOptions}
                   value={form.state}
                   onChange={(e) => set('state', e.target.value)}
                 />
@@ -680,13 +742,30 @@ export default function AddDoctorPage() {
                   onChange={(e) => set('doctorPainPoints', e.target.value)}
                   className="md:col-span-2"
                 />
-                {form.currentBrand && (
+                <FormSelect
+                  label="Reason for Not Switching"
+                  id="reasonNotSwitch"
+                  options={reasonOptions}
+                  value={form.reasonForNotSwitching}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      reasonForNotSwitching: value,
+                      reasonForNotSwitchingDetails: value ? prev.reasonForNotSwitchingDetails : '',
+                    }));
+                  }}
+                  className="md:col-span-2"
+                />
+                {form.reasonForNotSwitching && (
                   <FormTextarea
-                    label="Reason for Not Switching"
-                    id="reasonNotSwitch"
-                    placeholder="Contract, loyalty, pricing concerns..."
-                    value={form.reasonForNotSwitching}
-                    onChange={(e) => set('reasonForNotSwitching', e.target.value)}
+                    label="Explain this reason"
+                    id="reasonNotSwitchDetails"
+                    placeholder="Write why the doctor is not switching"
+                    value={form.reasonForNotSwitchingDetails}
+                    onChange={(e) => set('reasonForNotSwitchingDetails', e.target.value)}
+                    required
+                    autoFocus
                     className="md:col-span-2"
                   />
                 )}
@@ -807,7 +886,7 @@ export default function AddDoctorPage() {
           )}
 
           {step < STEPS.length - 1 ? (
-            <button type="button" className="btn btn-primary" onClick={() => setStep(step + 1)}>
+            <button type="button" className="btn btn-primary" onClick={handleNext}>
               Next Step
               <ChevronRight className="h-4 w-4" />
             </button>

@@ -11,6 +11,7 @@ export interface IDoctor extends Document {
   clinicName?: string;
   clinicAddress: string;
   city?: string;
+  area?: string;
   state?: string;
   assignedRep: Types.ObjectId;
 
@@ -38,6 +39,7 @@ export interface IDoctor extends Document {
   doctorLikes?: string;
   doctorPainPoints?: string;
   reasonForNotSwitching?: string;
+  reasonForNotSwitchingDetails?: string;
 
   // 6. Attachments
   clinicPhotograph?: string; // URL/Path
@@ -69,6 +71,7 @@ const DoctorSchema = new Schema<IDoctor>(
     clinicName: { type: String, trim: true },
     clinicAddress: { type: String, required: true },
     city: { type: String },
+    area: { type: String },
     state: { type: String },
     assignedRep: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 
@@ -96,6 +99,7 @@ const DoctorSchema = new Schema<IDoctor>(
     doctorLikes: { type: String },
     doctorPainPoints: { type: String },
     reasonForNotSwitching: { type: String },
+    reasonForNotSwitchingDetails: { type: String },
 
     // 6. Attachments
     clinicPhotograph: { type: String },
@@ -120,7 +124,12 @@ DoctorSchema.index({ assignedRep: 1 });
 DoctorSchema.index({ status: 1 });
 DoctorSchema.index({ category: 1 });
 DoctorSchema.index({ city: 1 });
+DoctorSchema.index({ area: 1 });
 DoctorSchema.index({ name: 'text', city: 'text', speciality: 'text' });
+
+if (mongoose.models.Doctor && !mongoose.models.Doctor.schema.path('area')) {
+  mongoose.deleteModel('Doctor');
+}
 
 const Doctor: Model<IDoctor> =
   mongoose.models.Doctor || mongoose.model<IDoctor>('Doctor', DoctorSchema);

@@ -32,7 +32,7 @@ export async function GET(
     }
 
     const visit = await Visit.findOne({ slug })
-      .populate('doctor', 'name slug speciality city category status')
+      .populate('doctor', 'name slug speciality city area category status')
       .populate('salesPerson', 'name email slug')
       .lean();
 
@@ -90,6 +90,12 @@ export async function PUT(
     Object.keys(payload).forEach((key: string) => {
       if (payload[key] === '') delete payload[key];
     });
+
+    delete payload.isFlagged;
+    delete payload.flagNote;
+    delete payload.flaggedAt;
+    delete payload.flaggedBy;
+    delete payload.flaggedByName;
 
     // Date changes must go through the reschedule endpoint (with mandatory remarks).
     if (canWrite(user)) {

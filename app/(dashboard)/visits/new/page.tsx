@@ -119,11 +119,12 @@ export default function NewVisitPage() {
   });
 
   const [doctorSearch, setDoctorSearch] = useState('');
-  const [doctors, setDoctors] = useState<Array<{ _id: string; name: string; slug: string; speciality: string; city: string }>>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<{ _id: string; name: string; slug: string; city?: string } | null>(null);
+  const [doctors, setDoctors] = useState<Array<{ _id: string; name: string; slug: string; speciality: string; city: string; area?: string }>>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<{ _id: string; name: string; slug: string; city?: string; area?: string } | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cityConflict, setCityConflict] = useState<{
+    title: string;
     message: string;
     details: {
       existingCity?: string;
@@ -167,7 +168,7 @@ export default function NewVisitPage() {
     if (doctorSlug) {
       fetch(`/api/doctors/${doctorSlug}`).then((r) => r.json()).then((d) => {
         if (d.data) {
-          setSelectedDoctor({ _id: d.data._id, name: d.data.name, slug: d.data.slug, city: d.data.city });
+          setSelectedDoctor({ _id: d.data._id, name: d.data.name, slug: d.data.slug, city: d.data.city, area: d.data.area });
           setDoctorSearch(d.data.name);
           setForm((f) => ({ ...f, doctor: d.data._id }));
         }
@@ -231,8 +232,12 @@ export default function NewVisitPage() {
       if (res.ok) {
         addToast('Visit logged successfully!', 'success');
         router.push(`/visits/${data.data.slug}`);
-      } else if (data.error === 'CITY_CONFLICT') {
-        setCityConflict({ message: data.message, details: data.details || {} });
+      } else if (data.error === 'CITY_CONFLICT' || data.error === 'DUPLICATE_DOCTOR_VISIT') {
+        setCityConflict({
+          title: data.error === 'DUPLICATE_DOCTOR_VISIT' ? 'Same-day visit already exists' : 'Same-day city conflict',
+          message: data.message,
+          details: data.details || {},
+        });
         setStep(0);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -258,7 +263,7 @@ export default function NewVisitPage() {
           <div className="visit-conflict-alert" role="alert">
             <div className="visit-conflict-alert-icon">🗺️</div>
             <div className="visit-conflict-alert-body">
-              <div className="visit-conflict-alert-title">Same-day city conflict</div>
+              <div className="visit-conflict-alert-title">{cityConflict.title}</div>
               <p className="visit-conflict-alert-message">{cityConflict.message}</p>
               <div className="visit-conflict-alert-details">
                 {cityConflict.details.existingCity && (
@@ -332,7 +337,7 @@ export default function NewVisitPage() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       <div style={{ fontWeight: 600 }}>{d.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.speciality} · {d.city}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.speciality} · {d.area || d.city}</div>
                     </div>
                   ))}
                 </div>

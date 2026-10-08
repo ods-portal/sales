@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { formatDate, daysSince } from '@/lib/utils';
+import { areaOptionsForCity, formatDate, daysSince } from '@/lib/utils';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
 
@@ -29,6 +29,7 @@ interface Doctor {
   category: string;
   status: string;
   city: string;
+  area?: string;
   state?: string;
   phone?: string;
   email?: string;
@@ -57,6 +58,8 @@ export default function DoctorsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
+  const [city, setCity] = useState('');
+  const [area, setArea] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [sort, setSort] = useState('-createdAt');
@@ -90,13 +93,15 @@ export default function DoctorsPage() {
       ...(search && { search }),
       ...(category && { category }),
       ...(status && { status }),
+      ...(city && { city }),
+      ...(area && { area }),
     });
     const res = await fetch(`/api/doctors?${params}`);
     const data = await res.json();
     setDoctors(data.data || []);
     setMeta({ totalCount: data.totalCount, totalPages: data.totalPages, currentPage: data.currentPage });
     setLoading(false);
-  }, [page, limit, sort, search, category, status]);
+  }, [page, limit, sort, search, category, status, city, area]);
 
   useEffect(() => {
     const timer = setTimeout(fetchDoctors, 300);
@@ -129,10 +134,11 @@ export default function DoctorsPage() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setCategory(''); setStatus(''); setPage(1);
+    setSearch(''); setCategory(''); setStatus(''); setCity(''); setArea(''); setPage(1);
   };
 
-  const hasFilters = search || category || status;
+  const hasFilters = search || category || status || city || area;
+  const areaOptions = areaOptionsForCity(city);
 
   return (
     <div>
@@ -166,6 +172,22 @@ export default function DoctorsPage() {
           <option value="">All Statuses</option>
           {(dropdowns['doctorStatus'] || []).map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+
+        <select
+          className="input flex-[0_0_160px]"
+          value={city}
+          onChange={(e) => { setCity(e.target.value); setArea(''); setPage(1); }}
+        >
+          <option value="">All Cities</option>
+          {(dropdowns['city'] || []).map((option) => <option key={option} value={option}>{option}</option>)}
+        </select>
+
+        {city && (
+          <select className="input flex-[0_0_180px]" value={area} onChange={(e) => { setArea(e.target.value); setPage(1); }}>
+            <option value="">All Areas</option>
+            {areaOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        )}
 
         {hasFilters && (
           <button className="btn btn-ghost btn-sm" onClick={clearFilters}>✕ Clear filters</button>
@@ -217,7 +239,10 @@ export default function DoctorsPage() {
                     </td>
                     <td className="text-text-secondary">{doc.speciality}</td>
                     <td><span className={CAT_BADGE[doc.category]}>{doc.category}</span></td>
-                    <td className="text-text-secondary">{doc.city}{doc.state ? `, ${doc.state}` : ''}</td>
+                    <td className="text-text-secondary">
+                      <div>{doc.city || '—'}</div>
+                      {doc.area && <div className="text-xs text-text-muted">{doc.area}</div>}
+                    </td>
                     {!isSales && <td className="text-text-secondary text-[13px]">{doc.assignedRep?.name}</td>}
                     <td>{doc.monthlyAlignerCases ?? '—'}</td>
                     <td className="text-[13px] text-text-secondary">

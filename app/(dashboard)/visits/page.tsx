@@ -30,9 +30,11 @@ interface Visit {
   visitType: string;
   status: string;
   followUpDate?: string;
-  doctor: { name: string; slug: string; city: string; speciality: string };
+  doctor: { name: string; slug: string; city: string; area?: string; speciality: string };
   salesPerson: { name: string; slug: string };
   meetingSummary: string;
+  isFlagged?: boolean;
+  flagNote?: string;
 }
 
 interface PaginationMeta {
@@ -363,18 +365,28 @@ export default function VisitsPage() {
                         {v.doctor?.name}
                       </Link>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        {v.doctor?.city} · {v.doctor?.speciality}
+                        {v.doctor?.area || v.doctor?.city} · {v.doctor?.speciality}
                       </p>
                     </td>
                     <td className="px-5 py-4 text-slate-600">{v.visitType}</td>
                     <td className="px-5 py-4 text-slate-600">{v.salesPerson?.name || '—'}</td>
                     <td className="px-5 py-4">
-                      <span className={cn(
-                        'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
-                        STATUS_STYLES[v.status] || STATUS_STYLES.Cancelled
-                      )}>
-                        {v.status}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn(
+                          'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
+                          STATUS_STYLES[v.status] || STATUS_STYLES.Cancelled
+                        )}>
+                          {v.status}
+                        </span>
+                        {v.isFlagged && (
+                          <span
+                            className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200"
+                            title={v.flagNote || 'Flagged'}
+                          >
+                            Flagged
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       {v.followUpDate ? (

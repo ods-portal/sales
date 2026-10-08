@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Pencil, ShieldOff, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRightLeft, Pencil, ShieldOff, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
 import PageShell from '@/components/ui/PageShell';
@@ -238,10 +239,19 @@ export default function UsersPage() {
         subtitle={`${total} users in system`}
         icon={<UserPlus className="h-5 w-5" />}
         actions={
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
-            <UserPlus className="h-4 w-4" />
-            Add User
-          </button>
+          <>
+            {(currentUser?.role === 'superAdmin' ||
+              (currentUser?.role === 'admin' && currentUser.hasWriteAccess)) && (
+              <Link href="/users/transfer" className="btn btn-secondary btn-sm">
+                <ArrowRightLeft className="h-4 w-4" />
+                Transfer Sales Data
+              </Link>
+            )}
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>
+              <UserPlus className="h-4 w-4" />
+              Add User
+            </button>
+          </>
         }
       />
 

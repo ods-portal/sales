@@ -15,7 +15,7 @@ export async function GET() {
 
     const [doctors, salesPersons] = await Promise.all([
       Doctor.find({})
-        .select('name city speciality slug')
+        .select('name city area speciality slug')
         .sort({ name: 1 })
         .lean(),
       User.find({ role: 'salesPerson', status: 'active' })
@@ -29,6 +29,7 @@ export async function GET() {
         id: String(d._id),
         name: d.name,
         city: d.city || '',
+        area: d.area || '',
         speciality: d.speciality || '',
         slug: d.slug,
       })),

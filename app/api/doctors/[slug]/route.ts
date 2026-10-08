@@ -2,9 +2,55 @@ import { connectDB } from '@/lib/db';
 import { getAuthUser, canWrite } from '@/lib/auth';
 import { resolveAssignedRep } from '@/lib/resolveRep';
 import Doctor from '@/models/Doctor';
+import Dropdown from '@/models/Dropdown';
+import { isValidAreaForCity } from '@/lib/utils';
 import User from '@/models/User';
 import AuditLog from '@/models/AuditLog';
 import { NextRequest } from 'next/server';
+
+async function validateDoctorLocation(
+  body: Record<string, unknown>,
+  existingCity?: string,
+  existingState?: string
+) {
+  const city = String(body.city || '').trim();
+  const area = String(body.area || '').trim();
+  const state = String(body.state || '').trim();
+  if (!city) return 'Please select a city';
+
+  const options = await Dropdown.find({ group: 'city', isActive: true }).select('label').lean();
+  const labels = options.map((option) => option.label);
+  if (!labels.includes(city) && city !== existingCity) {
+    return 'Please select a city from the list';
+  }
+  if (!isValidAreaForCity(city, area)) {
+    return 'Please select an area for this city';
+  }
+
+  if (state) {
+    const stateOptions = await Dropdown.find({ group: 'state', isActive: true }).select('label').lean();
+    const stateLabels = stateOptions.map((option) => option.label);
+    if (!stateLabels.includes(state) && state !== existingState) {
+      return 'Please select a state from the list';
+    }
+  }
+
+  body.city = city;
+  body.area = area;
+  body.state = state;
+  return null;
+}
+
+function validateSwitchingReason(body: Record<string, unknown>) {
+  const reason = String(body.reasonForNotSwitching || '').trim();
+  const details = String(body.reasonForNotSwitchingDetails || '').trim();
+  if (reason && !details) {
+    return 'Please explain the reason for not switching';
+  }
+  body.reasonForNotSwitching = reason;
+  body.reasonForNotSwitchingDetails = reason ? details : '';
+  return null;
+}
 
 // Force model registration for populate() refs — prevents tree-shaking
 void User;
@@ -75,6 +121,11 @@ export async function PUT(
       return Response.json({ error: 'Assigned Sales Rep is required' }, { status: 400 });
     }
 
+    const reasonError = validateSwitchingReason(body);
+    if (reasonError) return Response.json({ error: reasonError }, { status: 400 });
+    const clearSwitchingReason = !String(body.reasonForNotSwitching || '').trim();
+    const clearState = !String(body.state || '').trim();
+
     // Clean up empty strings — don't store them as "" in the DB
     Object.keys(body).forEach(key => {
       if (body[key] === '') delete body[key];
@@ -83,7 +134,15 @@ export async function PUT(
     const doctor = await Doctor.findOne({ slug });
     if (!doctor) return Response.json({ error: 'Doctor not found' }, { status: 404 });
 
+    const locationError = await validateDoctorLocation(body, doctor.city, doctor.state);
+    if (locationError) return Response.json({ error: locationError }, { status: 400 });
+
     const before = doctor.toObject() as unknown as Record<string, unknown>;
+    if (clearSwitchingReason) {
+      doctor.set('reasonForNotSwitching', undefined);
+      doctor.set('reasonForNotSwitchingDetails', undefined);
+    }
+    if (clearState) doctor.set('state', undefined);
     Object.assign(doctor, body);
     await doctor.save();
 

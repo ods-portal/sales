@@ -23,8 +23,10 @@ export async function GET(request: NextRequest) {
     const to = searchParams.get('to') || undefined;
     const doctorId = searchParams.get('doctorId') || undefined;
     const salesPersonId = searchParams.get('salesPersonId') || undefined;
+    const city = searchParams.get('city') || undefined;
+    const area = searchParams.get('area') || undefined;
 
-    const filters = { doctorId, salesPersonId };
+    const filters = { doctorId, salesPersonId, city, area };
 
     if (!['csv', 'html'].includes(format)) {
       return Response.json({ error: 'Invalid format. Use csv or html.' }, { status: 400 });
@@ -39,6 +41,8 @@ export async function GET(request: NextRequest) {
     let filenameBase = `dsr-report-${period.filenameSuffix}`;
     if (doctorId) filenameBase += '-doctor';
     if (salesPersonId) filenameBase += '-rep';
+    if (city) filenameBase += '-city';
+    if (area) filenameBase += '-area';
 
     if (format === 'csv') {
       const csv = generateReportCsv(data);
