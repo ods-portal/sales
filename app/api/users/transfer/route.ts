@@ -7,6 +7,7 @@ import Visit from '@/models/Visit';
 import AuditLog from '@/models/AuditLog';
 import { NextRequest } from 'next/server';
 import { format } from 'date-fns';
+import type { Types } from 'mongoose';
 
 const SKIPPED_KEYS = new Set(['_id', '__v', 'slug', 'previousSlugs']);
 
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function copyDoctors(fromId: unknown, toId: unknown) {
+async function copyDoctors(fromId: Types.ObjectId, toId: Types.ObjectId) {
   const doctors = await Doctor.find({ assignedRep: fromId }).lean();
   const doctorMap = new Map<string, string>();
   const slugs: string[] = [];
@@ -76,8 +77,8 @@ async function copyDoctors(fromId: unknown, toId: unknown) {
 }
 
 async function copyVisits(
-  fromId: unknown,
-  toId: unknown,
+  fromId: Types.ObjectId,
+  toId: Types.ObjectId,
   doctorMap: Map<string, string>
 ) {
   const visits = await Visit.find({ salesPerson: fromId }).lean();
