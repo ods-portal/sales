@@ -31,15 +31,17 @@ const CAT_BADGE: Record<string, string> = {
   C: 'badge badge-amber',
 };
 
+const STAT_TILE = 'text-center max-md:rounded-xl max-md:border max-md:border-border max-md:bg-white/80 max-md:px-2 max-md:py-2.5';
+
 const InfoRow = ({ label, value }: { label: string; value?: unknown }) => {
   if (value === undefined || value === null || value === '') return null;
   let displayValue = String(value);
   if (Array.isArray(value)) displayValue = value.join(', ');
   
   return (
-    <div className="flex flex-col gap-1 py-2.5 border-b border-border sm:flex-row sm:gap-2">
-      <span className="sm:min-w-[200px] text-[13px] text-text-secondary font-medium">{label}</span>
-      <span className="text-sm text-text-primary whitespace-pre-wrap">{displayValue}</span>
+    <div className="flex flex-col gap-0.5 py-2 border-b border-border sm:flex-row sm:gap-2 sm:py-2.5">
+      <span className="sm:min-w-[200px] text-[11px] font-semibold uppercase tracking-wide text-text-muted sm:text-[13px] sm:font-medium sm:normal-case sm:tracking-normal sm:text-text-secondary">{label}</span>
+      <span className="text-[13px] font-medium text-text-primary whitespace-pre-wrap break-words sm:text-sm sm:font-normal">{displayValue}</span>
     </div>
   );
 };
@@ -101,26 +103,26 @@ export default function DoctorDetailPage() {
 
       {/* Doctor Header Card */}
       <div className="card mb-4 bg-gradient-to-br from-[#F0F4FF] to-white">
-        <div className="flex items-start gap-5 flex-wrap">
-          <div className="w-[72px] h-[72px] rounded-[18px] bg-brand text-white flex items-center justify-center text-[28px] font-extrabold shrink-0">
+        <div className="flex items-start gap-3 flex-wrap md:gap-5">
+          <div className="w-14 h-14 rounded-2xl text-[22px] md:w-[72px] md:h-[72px] md:rounded-[18px] md:text-[28px] bg-brand text-white flex items-center justify-center font-extrabold shrink-0">
             {String(doctor.name).charAt(4)?.toUpperCase() || 'D'}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-[22px] font-extrabold text-text-primary m-0">{String(doctor.name)}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap md:gap-2.5">
+              <h1 className="text-lg md:text-[22px] font-extrabold text-text-primary m-0">{String(doctor.name)}</h1>
               {doctor.category && <span className={CAT_BADGE[String(doctor.category)] || 'badge badge-gray'}>Cat. {String(doctor.category)}</span>}
               {doctor.status && <span className={STATUS_BADGE[String(doctor.status)] || 'badge badge-gray'}>{String(doctor.status)}</span>}
             </div>
             <div className="text-sm text-text-secondary mt-1">
               {doctor.speciality} · {doctor.area || doctor.city}{doctor.state ? `, ${doctor.state}` : ''}
             </div>
-            <div className="flex gap-4 mt-3 flex-wrap">
+            <div className="flex flex-col gap-1.5 mt-2.5 md:flex-row md:flex-wrap md:gap-4 md:mt-3 max-md:[&>*]:break-all">
               {Boolean(doctor.phone) && <a href={`tel:${doctor.phone}`} className="text-[13px] text-brand no-underline">📞 {String(doctor.phone)}</a>}
               {Boolean(doctor.email) && <a href={`mailto:${doctor.email}`} className="text-[13px] text-brand no-underline">✉️ {String(doctor.email)}</a>}
               <span className="text-[13px] text-text-muted">📅 Added {formatDate(String(doctor.createdAt))}</span>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 max-md:w-full max-md:[&>*]:flex-1 max-md:[&>*]:justify-center">
             {canCreateRecords(currentUser) && (
               <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary">+ Log Visit</Link>
             )}
@@ -131,26 +133,26 @@ export default function DoctorDetailPage() {
         </div>
 
         {/* Quick stats */}
-        <div className="flex gap-6 mt-5 pt-5 border-t border-border flex-wrap">
-          <div className="text-center">
-            <div className="text-[22px] font-extrabold text-brand">{visits.length}</div>
+        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border md:flex md:flex-wrap md:gap-6 md:mt-5 md:pt-5">
+          <div className={STAT_TILE}>
+            <div className="text-xl md:text-[22px] font-extrabold text-brand">{visits.length}</div>
             <div className="text-xs text-text-muted">Total Visits</div>
           </div>
           {Boolean(doctor.monthlyAlignerCases) && (
-            <div className="text-center">
-              <div className="text-[22px] font-extrabold text-success">{String(doctor.monthlyAlignerCases)}</div>
+            <div className={STAT_TILE}>
+              <div className="text-xl md:text-[22px] font-extrabold text-success">{String(doctor.monthlyAlignerCases)}</div>
               <div className="text-xs text-text-muted">Aligner Cases/Month</div>
             </div>
           )}
           {Boolean(doctor.probabilityOfConversion) && (
-            <div className="text-center">
-              <div className="text-[22px] font-extrabold text-info">{String(doctor.probabilityOfConversion)}%</div>
+            <div className={STAT_TILE}>
+              <div className="text-xl md:text-[22px] font-extrabold text-info">{String(doctor.probabilityOfConversion)}%</div>
               <div className="text-xs text-text-muted">Conversion Prob.</div>
             </div>
           )}
           {visits.length > 0 && (
-            <div className="text-center">
-              <div className="text-[22px] font-extrabold text-warning">
+            <div className={STAT_TILE}>
+              <div className="text-xl md:text-[22px] font-extrabold text-warning">
                 {daysSince(String((visits[0] as Record<string, unknown>).visitDate))}d
               </div>
               <div className="text-xs text-text-muted">Days Since Last Visit</div>

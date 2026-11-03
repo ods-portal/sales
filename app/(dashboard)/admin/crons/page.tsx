@@ -186,9 +186,9 @@ export default function AdminCronsPage() {
                   {lastResult.results.map((row) => (
                     <tr key={row.email} className="border-b border-slate-100 last:border-0">
                       <td className="cell-primary py-2.5 pr-3 font-medium">{row.name}</td>
-                      <td data-label="Email" className="py-2.5 pr-3 text-slate-600 max-md:break-all">{row.email}</td>
+                      <td data-label="Email" className="cell-wide py-2.5 pr-3 text-slate-600 max-md:break-all">{row.email}</td>
                       <td data-label="Status" className="py-2.5 pr-3 capitalize">{row.status}</td>
-                      <td data-label="Details" className="py-2.5 text-slate-500">
+                      <td data-label="Details" className="cell-wide py-2.5 text-slate-500">
                         {row.reason ||
                           (row.visitCount !== undefined ? `${row.visitCount} visit(s)` : '—')}
                       </td>

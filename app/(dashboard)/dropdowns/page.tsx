@@ -159,15 +159,15 @@ export default function DropdownsPage() {
       {loading ? (
         <div className="card"><div className="skeleton h-[300px]" /></div>
       ) : (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 items-start gap-3 md:gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           
-          <div className="card p-3">
-            <div className="text-[12px] font-bold text-text-muted uppercase tracking-[0.5px] mb-2 px-1">Groups</div>
+          <div className="card p-3 max-md:flex max-md:gap-1.5 max-md:overflow-x-auto max-md:p-2 max-md:[scrollbar-width:none]">
+            <div className="text-[12px] font-bold text-text-muted uppercase tracking-[0.5px] mb-2 px-1 max-md:hidden">Groups</div>
             {Object.keys(grouped).map((g) => (
               <button
                 key={g}
                 onClick={() => { setActiveGroup(g); cancelEdit(); }}
-                className={`flex items-center justify-between w-full py-2.5 px-3 rounded-lg border-none text-[13px] text-left transition-all mb-0.5 cursor-pointer ${activeGroup === g ? 'bg-brand-light text-brand font-semibold' : 'bg-transparent text-text-primary font-normal'}`}
+                className={`flex items-center justify-between w-full py-2.5 px-3 rounded-lg border-none text-[13px] max-md:w-auto max-md:shrink-0 max-md:gap-1.5 max-md:mb-0 max-md:rounded-full max-md:py-1.5 max-md:text-xs max-md:whitespace-nowrap text-left transition-all mb-0.5 cursor-pointer ${activeGroup === g ? 'bg-brand-light text-brand font-semibold' : 'bg-transparent text-text-primary font-normal'}`}
               >
                 <span>{GROUP_LABELS[g] || g}</span>
                 <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${activeGroup === g ? 'bg-brand text-white' : 'bg-border text-text-muted'}`}>
@@ -180,7 +180,7 @@ export default function DropdownsPage() {
           {/* Options Panel */}
           <div>
             <div className="card mb-3">
-              <div className="font-bold text-base mb-4">
+              <div className="font-bold text-base mb-3 md:mb-4">
                 {GROUP_LABELS[activeGroup] || activeGroup}
                 {currentItems.some((i) => i.isSystem) && (
                   <span className="badge badge-gray ml-2 text-[11px]">Contains system defaults</span>
@@ -189,7 +189,7 @@ export default function DropdownsPage() {
 
               {/* Add new */}
               {canEdit && activeGroup && (currentItems.length === 0 || !currentItems.every((i) => i.isSystem)) && (
-                <div className="flex gap-2.5 mb-4 p-3 bg-bg-secondary rounded-xl">
+                <div className="flex flex-wrap gap-2 mb-3 p-2.5 bg-bg-secondary rounded-xl md:flex-nowrap md:gap-2.5 md:mb-4 md:p-3">
                   <input
                     className="input flex-1"
                     placeholder="Label"

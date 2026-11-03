@@ -79,6 +79,21 @@
   --sidebar-accent: #818cf8;
 }
 
+/* App-wide: no text selection or callouts, except where users type */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -902,6 +917,7 @@ table.data-table {
   .input-error { font-size: 11px; }
   .badge { font-size: 11px; padding: 2px 8px; }
   .page-header .btn { flex: 1 1 auto; justify-content: center; }
+  .btn svg { flex-shrink: 0; }
 
   /* Horizontally scrollable pill rows */
   .status-filter-bar {
@@ -942,15 +958,17 @@ table.data-table {
   }
   .toast { min-width: 0; max-width: none; width: 100%; }
 
-  /* Tables → stacked cards. Add data-label on <td> to show a label. */
-  .card:has(.responsive-table) {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
+  /* Tables → stacked cards with a 2-column field grid. Add data-label on <td>. */
+  .card:has(.responsive-table),
+  div:has(> .table-container > .responsive-table) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
   }
   .table-container:has(.responsive-table) {
-    overflow: visible;
+    overflow: visible !important;
     border: none;
     background: transparent;
     backdrop-filter: none;
@@ -962,65 +980,91 @@ table.data-table {
   .responsive-table tbody,
   .responsive-table tr,
   .responsive-table td { display: block; width: 100%; }
-  .responsive-table tbody { display: flex; flex-direction: column; gap: 8px; }
+  .responsive-table tbody { display: flex; flex-direction: column; gap: 10px; }
   .responsive-table tbody tr {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 12px 14px;
     border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(79, 70, 229, 0.05);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px -8px rgba(79, 70, 229, 0.12);
+    transition: transform 150ms ease, box-shadow 150ms ease;
   }
-  .responsive-table tbody tr:hover { background: rgba(255, 255, 255, 0.95); }
+  .responsive-table tbody tr:active { transform: scale(0.99); }
+  .responsive-table tbody tr:hover { background: #fff; }
   .responsive-table td {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    min-height: 24px;
-    padding: 3px 0 !important;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 !important;
     border: none !important;
-    text-align: right;
+    text-align: left;
     font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
   }
-  .responsive-table td > * { min-width: 0; }
+  .responsive-table td > * { min-width: 0; max-width: 100%; }
   .responsive-table td[data-label]::before {
     content: attr(data-label);
-    flex-shrink: 0;
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--text-muted);
-    text-align: left;
   }
   .responsive-table td.cell-primary {
+    grid-column: 1 / -1;
     order: -1;
     display: block;
-    padding: 0 0 6px !important;
-    margin-bottom: 3px;
-    border-bottom: 1px solid rgba(241, 245, 249, 1) !important;
-    text-align: left;
+    padding: 0 0 10px !important;
+    border-bottom: 1px dashed rgba(226, 232, 240, 1) !important;
     font-size: 14px;
+    line-height: 1.3;
   }
+  .responsive-table td.cell-wide { grid-column: 1 / -1; }
+  /* Pinned to the right column so it fills the gap beside an odd last field */
   .responsive-table td.cell-actions {
+    grid-column: 2;
+    align-self: end;
+    flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
-    margin-top: 4px;
-    padding-top: 8px !important;
-    border-top: 1px solid rgba(241, 245, 249, 1) !important;
+  }
+  .responsive-table td.cell-actions > div { justify-content: flex-end; }
+  .responsive-table td.cell-actions .btn-sm {
+    min-width: 34px;
+    min-height: 34px;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
   }
   .responsive-table td.cell-hide-mobile { display: none; }
   .responsive-table td[colspan] {
+    grid-column: 1 / -1;
     display: block;
     text-align: center;
   }
   .responsive-table tr:has(> td[colspan]) {
-    border: none;
-    background: transparent;
+    display: block;
+    border: 1px dashed rgba(203, 213, 225, 1);
+    background: rgba(255, 255, 255, 0.6);
     box-shadow: none;
+  }
+
+  /* Sticky form footers clear the bottom nav */
+  .mobile-sticky-footer {
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+    border-radius: 0 0 16px 16px;
   }
 }
 

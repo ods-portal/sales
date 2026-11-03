@@ -306,7 +306,7 @@ export default function UsersPage() {
                   return (
                     <tr key={u._id}>
                       <td className="cell-primary max-w-[100px] truncate font-medium max-md:max-w-none">{u.name}</td>
-                      <td data-label="Email" className="max-w-[140px] truncate text-[11px] text-text-secondary max-md:max-w-none max-md:text-[13px]" title={u.email}>
+                      <td data-label="Email" className="cell-wide max-w-[140px] truncate text-[11px] text-text-secondary max-md:max-w-none max-md:text-[13px]" title={u.email}>
                         {u.email}
                       </td>
                       <td data-label="Role">

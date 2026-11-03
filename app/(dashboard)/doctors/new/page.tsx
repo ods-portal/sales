@@ -281,14 +281,14 @@ function StepSection({
 }) {
   const Icon = STEP_ICONS[step];
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-4 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/80 to-white p-5">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-indigo-200/50">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/80 to-white p-3.5 md:gap-4 md:p-5">
+        <div className="flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-indigo-200/50">
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{STEPS[step]}</h2>
-          <p className="mt-1 text-sm leading-relaxed text-slate-500">{STEP_DESCRIPTIONS[step]}</p>
+          <h2 className="text-base font-bold text-slate-900 md:text-lg">{STEPS[step]}</h2>
+          <p className="mt-0.5 text-xs leading-relaxed text-slate-500 md:mt-1 md:text-sm">{STEP_DESCRIPTIONS[step]}</p>
         </div>
       </div>
       {children}
@@ -485,13 +485,13 @@ export default function AddDoctorPage() {
       />
 
       <Card className="overflow-hidden p-0">
-        <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-6 sm:px-8">
+        <div className="border-b border-slate-100 bg-slate-50/50 px-3 py-4 sm:px-8 md:py-6">
           <div className="overflow-x-auto">
             <StepIndicator current={step} total={STEPS.length} labels={STEPS} />
           </div>
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="p-3.5 sm:p-8">
           {step === 0 && (
             <StepSection step={0}>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -875,7 +875,7 @@ export default function AddDoctorPage() {
           )}
         </div>
 
-        <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-slate-100 bg-white/95 px-6 py-4 backdrop-blur-sm sm:px-8">
+        <div className="mobile-sticky-footer sticky bottom-0 flex items-center justify-between gap-3 border-t border-slate-100 bg-white/95 px-3.5 py-3 backdrop-blur-sm sm:px-8 md:py-4">
           {step > 0 ? (
             <button type="button" className="btn btn-secondary" onClick={() => setStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" />

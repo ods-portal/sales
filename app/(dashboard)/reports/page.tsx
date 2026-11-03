@@ -583,13 +583,13 @@ export default function ReportsPage() {
         )}
 
         {previewLoading || filtersLoading ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-[100px] animate-pulse rounded-2xl bg-slate-100" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:gap-4">
             {[
               { label: 'Total Visits', value: preview?.kpis.totalVisits || 0, color: 'indigo' },
               { label: 'Completed', value: preview?.kpis.completedVisits || 0, color: 'green' },
@@ -605,8 +605,8 @@ export default function ReportsPage() {
               },
             ].map((k) => (
               <div key={k.label} className={`kpi-card ${k.color}`}>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">{k.label}</div>
-                <div className="text-[32px] font-extrabold">{k.value}</div>
+                <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-text-secondary md:mb-2 md:text-xs">{k.label}</div>
+                <div className="text-2xl font-extrabold md:text-[32px]">{k.value}</div>
               </div>
             ))}
           </div>

@@ -37,8 +37,8 @@ const STATUS_BADGE: Record<string, string> = {
 const BooleanRow = ({ label, value }: { label: string; value?: unknown }) => {
   if (value === undefined || value === null) return null;
   return (
-    <div className="flex flex-col gap-1 py-3 border-b border-border sm:flex-row sm:items-center sm:gap-2">
-      <span className="sm:min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
+    <div className="flex flex-col gap-0.5 py-2 border-b border-border sm:flex-row sm:items-center sm:gap-2 sm:py-3">
+      <span className="sm:min-w-[160px] text-[11px] font-semibold uppercase tracking-wide text-text-muted sm:text-[13px] sm:font-medium sm:normal-case sm:tracking-normal sm:text-text-secondary">{label}</span>
       <span className={`text-sm ${value ? 'text-success' : 'text-text-muted'}`}>
         {value ? '✅ Yes' : '❌ No'}
       </span>
@@ -53,8 +53,8 @@ const InfoRow = ({ label, value, type = 'text' }: { label: string; value?: unkno
     displayValue = formatDate(value as string);
   }
   return (
-    <div className="flex flex-col gap-1 py-3 border-b border-border sm:flex-row sm:gap-2">
-      <span className="sm:min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
+    <div className="flex flex-col gap-0.5 py-2 border-b border-border sm:flex-row sm:gap-2 sm:py-3">
+      <span className="sm:min-w-[160px] text-[11px] font-semibold uppercase tracking-wide text-text-muted sm:text-[13px] sm:font-medium sm:normal-case sm:tracking-normal sm:text-text-secondary">{label}</span>
       <span className="text-sm text-text-primary font-medium flex-1">{displayValue}</span>
     </div>
   );
@@ -63,9 +63,9 @@ const InfoRow = ({ label, value, type = 'text' }: { label: string; value?: unkno
 const TextBlock = ({ label, value }: { label: string; value?: unknown }) => {
   if (!value) return null;
   return (
-    <div className="mt-4">
-      <span className="block text-[13px] text-text-secondary font-medium mb-2">{label}</span>
-      <div className="p-4 bg-bg-secondary rounded-[10px] text-sm leading-[1.6] text-text-primary whitespace-pre-wrap">
+    <div className="mt-3 sm:mt-4">
+      <span className="block mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-muted sm:mb-2 sm:text-[13px] sm:font-medium sm:normal-case sm:tracking-normal sm:text-text-secondary">{label}</span>
+      <div className="p-3 bg-bg-secondary rounded-[10px] text-[13px] leading-[1.6] sm:p-4 sm:text-sm text-text-primary whitespace-pre-wrap">
         {String(value)}
       </div>
     </div>

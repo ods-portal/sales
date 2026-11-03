@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import CopyGuard from '@/components/layout/CopyGuard';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <CopyGuard />
+        {children}
+      </body>
     </html>
   );
 }
