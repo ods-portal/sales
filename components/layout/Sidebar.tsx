@@ -119,9 +119,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
   const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedSections, setExpandedSections] = useState<string[]>([
-    'Dashboard',
-    'Doctor Management',
-    'Visit Management',
+    'Dashboard'
   ]);
 
   const toggleSection = (title: string) => {
@@ -217,50 +215,68 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
 
         {/* Nav */}
         <div className="sidebar-nav flex-1 overflow-y-auto py-3">
-          {NAV.filter(canSeeSection).map((section) => (
-            <div key={section.title}>
-              {!collapsed && (
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between px-4 py-2 text-left"
-                  onClick={() => toggleSection(section.title)}
+          {NAV.filter(canSeeSection).map((section) => {
+            const isOpen = collapsed || expandedSections.includes(section.title);
+            const panelId = `sidebar-section-${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+            return (
+              <div key={section.title}>
+                {!collapsed && (
+                  <button
+                    type="button"
+                    className="group/section flex w-full items-center justify-between rounded-lg px-4 py-2 text-left transition-colors duration-200 ease-in-out hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+                    onClick={() => toggleSection(section.title)}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                  >
+                    <span className="sidebar-section-header !p-0 transition-colors duration-200 group-hover/section:text-slate-300">{section.title}</span>
+                    <ChevronDown
+                      className={cn(
+                        'h-3.5 w-3.5 text-slate-600 transition-transform duration-300 ease-in-out group-hover/section:text-slate-400 motion-reduce:transition-none',
+                        isOpen && 'rotate-180'
+                      )}
+                    />
+                  </button>
+                )}
+                <div
+                  id={panelId}
+                  className={cn(
+                    'grid transition-[grid-template-rows,opacity] duration-300 ease-in-out motion-reduce:transition-none',
+                    isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                  )}
+                  inert={!isOpen}
                 >
-                  <span className="sidebar-section-header !p-0">{section.title}</span>
-                  <ChevronDown
-                    className={cn(
-                      'h-3.5 w-3.5 text-slate-600 transition-transform duration-200',
-                      expandedSections.includes(section.title) && 'rotate-180'
-                    )}
-                  />
-                </button>
-              )}
-              {(collapsed || expandedSections.includes(section.title)) &&
-                section.items.filter(canSeeItem).map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn('sidebar-nav-item group', active && 'active')}
-                      title={collapsed ? item.label : undefined}
-                      onClick={() => {
-                        if (window.innerWidth < 768) onMobileClose();
-                      }}
-                    >
-                      <Icon
-                        className={cn(
-                          'h-[18px] w-[18px] shrink-0 transition-colors',
-                          active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
-                        )}
-                        strokeWidth={active ? 2.25 : 1.75}
-                      />
-                      {!collapsed && <span>{item.label}</span>}
-                    </Link>
-                  );
-                })}
-            </div>
-          ))}
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="pb-1">
+                      {section.items.filter(canSeeItem).map((item) => {
+                        const Icon = item.icon;
+                        const active = isActive(item.href);
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn('sidebar-nav-item group', active && 'active')}
+                            title={collapsed ? item.label : undefined}
+                            onClick={() => {
+                              if (window.innerWidth < 768) onMobileClose();
+                            }}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-[18px] w-[18px] shrink-0 transition-colors',
+                                active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
+                              )}
+                              strokeWidth={active ? 2.25 : 1.75}
+                            />
+                            {!collapsed && <span>{item.label}</span>}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Footer */}
