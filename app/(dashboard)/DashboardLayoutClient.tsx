@@ -82,7 +82,7 @@ export default function DashboardLayoutClient({ children, user }: DashboardLayou
           />
           <div className={`main-content ${collapsed ? 'collapsed' : ''}`}>
             <TopBar title={title} showBack={showBack} onMenuOpen={openMobileMenu} />
-            <main className="mobile-main relative min-h-screen px-4 pt-4 md:p-6 lg:p-8">
+            <main className="mobile-main relative min-h-screen px-3 pt-3 md:p-6 lg:p-8">
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
                 <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-violet-200/15 blur-3xl" />

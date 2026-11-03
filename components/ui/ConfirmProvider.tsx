@@ -49,7 +49,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           />
 
           {/* Dialog */}
-          <div className="relative w-full rounded-t-3xl border border-border bg-bg-primary px-5 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[confirmSlideIn_0.2s_ease-out] md:max-w-[420px] md:rounded-2xl md:px-8 md:py-7">
+          <div className="relative w-full rounded-t-3xl border border-border bg-bg-primary confirm-sheet px-5 pt-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[confirmSlideIn_0.2s_ease-out] md:max-w-[420px] md:rounded-2xl md:px-8 md:py-7">
             <div className="text-lg font-bold mb-2">
               {dialog.title || 'Confirm Action'}
             </div>
