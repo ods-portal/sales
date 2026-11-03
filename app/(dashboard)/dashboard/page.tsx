@@ -84,7 +84,7 @@ export default function DashboardPage() {
         }
       />
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+      <div className="grid grid-cols-2 gap-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:gap-4">
         <KpiCard label="Total Doctors" value={data?.kpis?.totalDoctors || 0} hint="Registered in system" accent="indigo" icon={<Stethoscope className="h-5 w-5" />} loading={loading} />
         <KpiCard label="Visits This Month" value={data?.kpis?.visitsThisMonth || 0} hint="Current month" accent="emerald" icon={<Calendar className="h-5 w-5" />} loading={loading} />
         <KpiCard label="Pending Follow-ups" value={data?.kpis?.pendingFollowUps || 0} hint="Scheduled ahead" accent="amber" icon={<Clock className="h-5 w-5" />} loading={loading} />

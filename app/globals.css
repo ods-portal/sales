@@ -66,6 +66,7 @@
   /* Sidebar */
   --sidebar-width: 260px;
   --sidebar-collapsed: 64px;
+  --mobile-nav-height: 64px;
   --sidebar-bg: #0b1120;
   --sidebar-bg-elevated: rgba(255, 255, 255, 0.04);
   --sidebar-border: rgba(148, 163, 184, 0.12);
@@ -848,6 +849,158 @@ table.data-table {
   .main-content {
     margin-left: 0 !important;
   }
+
+  /* App shell */
+  body { -webkit-tap-highlight-color: transparent; }
+  .mobile-top-bar {
+    min-height: calc(56px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  .mobile-main {
+    padding-bottom: calc(var(--mobile-nav-height) + 24px + env(safe-area-inset-bottom));
+  }
+  .mobile-bottom-nav {
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  /* Surfaces */
+  .card { padding: 16px; border-radius: 16px; }
+  .card-sm { padding: 12px; border-radius: 14px; }
+  .kpi-card { padding: 16px; border-radius: 16px; }
+  .page-header { margin-bottom: 16px; gap: 12px; }
+  .page-header > * { min-width: 0; }
+  .page-title { font-size: 1.375rem; }
+  .page-subtitle { font-size: 13px; }
+
+  /* Touch targets & inputs (16px stops iOS zoom on focus) */
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 40px; }
+  .input, select.input, textarea.input { font-size: 16px; min-height: 44px; }
+  .page-header .btn { flex: 1 1 auto; justify-content: center; }
+
+  /* Horizontally scrollable pill rows */
+  .status-filter-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .status-filter-bar::-webkit-scrollbar { display: none; }
+  .status-pill { flex-shrink: 0; }
+
+  /* Modals become bottom sheets */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: sheetUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 0;
+    border-radius: 999px;
+    background: #cbd5e1;
+  }
+
+  /* Toasts sit full-width at the top */
+  .toast-container {
+    top: calc(12px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+  }
+  .toast { min-width: 0; max-width: none; width: 100%; }
+
+  /* Tables → stacked cards. Add data-label on <td> to show a label. */
+  .card:has(.responsive-table) {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .table-container:has(.responsive-table) {
+    overflow: visible;
+    border: none;
+    background: transparent;
+    backdrop-filter: none;
+    border-radius: 0;
+  }
+  .responsive-table { min-width: 0 !important; }
+  .responsive-table thead { display: none; }
+  .responsive-table,
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td { display: block; width: 100%; }
+  .responsive-table tbody { display: flex; flex-direction: column; gap: 12px; }
+  .responsive-table tbody tr {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(79, 70, 229, 0.05);
+  }
+  .responsive-table tbody tr:hover { background: rgba(255, 255, 255, 0.95); }
+  .responsive-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 32px;
+    padding: 6px 0 !important;
+    border: none !important;
+    text-align: right;
+    font-size: 14px;
+  }
+  .responsive-table td > * { min-width: 0; }
+  .responsive-table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+  }
+  .responsive-table td.cell-primary {
+    order: -1;
+    display: block;
+    padding: 0 0 10px !important;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(241, 245, 249, 1) !important;
+    text-align: left;
+    font-size: 15px;
+  }
+  .responsive-table td.cell-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(241, 245, 249, 1) !important;
+  }
+  .responsive-table td.cell-hide-mobile { display: none; }
+  .responsive-table td[colspan] {
+    display: block;
+    text-align: center;
+  }
+  .responsive-table tr:has(> td[colspan]) {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* ── Login Page ────────────────────────────────────── */

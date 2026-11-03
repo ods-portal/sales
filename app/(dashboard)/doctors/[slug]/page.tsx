@@ -37,8 +37,8 @@ const InfoRow = ({ label, value }: { label: string; value?: unknown }) => {
   if (Array.isArray(value)) displayValue = value.join(', ');
   
   return (
-    <div className="flex gap-2 py-2.5 border-b border-border">
-      <span className="min-w-[200px] text-[13px] text-text-secondary font-medium">{label}</span>
+    <div className="flex flex-col gap-1 py-2.5 border-b border-border sm:flex-row sm:gap-2">
+      <span className="sm:min-w-[200px] text-[13px] text-text-secondary font-medium">{label}</span>
       <span className="text-sm text-text-primary whitespace-pre-wrap">{displayValue}</span>
     </div>
   );
@@ -230,38 +230,38 @@ export default function DoctorDetailPage() {
             <div>
               {doctor.clinicPhotograph && (
                 <div className="mb-6">
-                  <div className="flex items-center justify-between max-w-[300px] mb-2">
+                  <div className="flex items-center justify-between max-w-[min(300px,100%)] mb-2">
                     <div className="text-[13px] text-text-secondary font-medium">Clinic Photograph</div>
                     <a href={doctor.clinicPhotograph} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm px-2 py-1 text-xs">
                       ⬇️ Download
                     </a>
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={doctor.clinicPhotograph} alt="Clinic" className="max-w-[300px] rounded-lg border border-border" />
+                  <img src={doctor.clinicPhotograph} alt="Clinic" className="max-w-[min(300px,100%)] rounded-lg border border-border" />
                 </div>
               )}
               {doctor.doctorPhotograph && doctor.doctorPhotoConsent && (
                 <div className="mb-6">
-                  <div className="flex items-center justify-between max-w-[300px] mb-2">
+                  <div className="flex items-center justify-between max-w-[min(300px,100%)] mb-2">
                     <div className="text-[13px] text-text-secondary font-medium">Doctor Photograph</div>
                     <a href={doctor.doctorPhotograph} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm px-2 py-1 text-xs">
                       ⬇️ Download
                     </a>
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={doctor.doctorPhotograph} alt="Doctor" className="max-w-[300px] rounded-lg border border-border" />
+                  <img src={doctor.doctorPhotograph} alt="Doctor" className="max-w-[min(300px,100%)] rounded-lg border border-border" />
                 </div>
               )}
               {doctor.visitingCard && (
                 <div className="mb-6">
-                  <div className="flex items-center justify-between max-w-[300px] mb-2">
+                  <div className="flex items-center justify-between max-w-[min(300px,100%)] mb-2">
                     <div className="text-[13px] text-text-secondary font-medium">Visiting Card</div>
                     <a href={doctor.visitingCard} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm px-2 py-1 text-xs">
                       ⬇️ Download
                     </a>
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={doctor.visitingCard} alt="Visiting Card" className="max-w-[300px] rounded-lg border border-border" />
+                  <img src={doctor.visitingCard} alt="Visiting Card" className="max-w-[min(300px,100%)] rounded-lg border border-border" />
                 </div>
               )}
               {doctor.documents && Array.isArray(doctor.documents) && doctor.documents.length > 0 && (

@@ -264,7 +264,7 @@ export default function EditDoctorPage() {
 
         {/* Step 0 — Information */}
         {step === 0 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Doctor Name *" id="name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
             <SelectField label="Speciality" id="speciality" options={getOptions('speciality')} value={form.speciality} onChange={(e) => set('speciality', e.target.value)} />
             
@@ -327,7 +327,7 @@ export default function EditDoctorPage() {
 
         {/* Step 1 — Practice Profile */}
         {step === 1 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Multi-selects share a row for consistent height */}
             <MultiSelectField label="Current Aligner Brand(s) Used" id="brands" options={getOptions('currentAlignerBrand')} value={form.currentAlignerBrands} onChange={(val) => set('currentAlignerBrands', val)} />
             <MultiSelectField label="Other Orthodontic Systems Used" id="otherSystems" options={getOptions('otherOrthoSystem')} value={form.otherOrthoSystems} onChange={(val) => set('otherOrthoSystems', val)} />
@@ -340,7 +340,7 @@ export default function EditDoctorPage() {
 
         {/* Step 2 — Categorization */}
         {step === 2 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SelectField label="Potential Rating" id="potential" options={getOptions('potentialRating')} value={form.potentialRating} onChange={(e) => set('potentialRating', e.target.value)} />
             <SelectField label="Current Status" id="status" options={getOptions('doctorStatus')} value={form.status} onChange={(e) => set('status', e.target.value)} />
             
@@ -360,7 +360,7 @@ export default function EditDoctorPage() {
 
         {/* Step 3 — Opportunity Tracking */}
         {step === 3 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="input-label">Probability of Conversion (%)</label>
               <div className="flex items-center gap-4 h-[42px]">
@@ -377,7 +377,7 @@ export default function EditDoctorPage() {
 
         {/* Step 4 — Competitor Info */}
         {step === 4 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Current Brand" id="currBrand" value={form.currentBrand} onChange={(e) => set('currentBrand', e.target.value)} />
             <Field label="Current Pricing" id="currPricing" type="number" value={form.currentPricing} onChange={(e) => set('currentPricing', e.target.value)} />
             
@@ -427,7 +427,7 @@ export default function EditDoctorPage() {
               Upload files directly to secure cloud storage.
             </p>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FileUploadWithProgress 
                 label="Clinic Photograph" 
                 id="clinicPhoto" 
@@ -475,7 +475,7 @@ export default function EditDoctorPage() {
 
         {/* Step 6 — Additional Info */}
         {step === 6 && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Doctor Birthday" id="bday" type="date" value={form.doctorBirthday} onChange={(e) => set('doctorBirthday', e.target.value)} />
             <Field label="Clinic Anniversary" id="anniv" type="date" value={form.clinicAnniversary} onChange={(e) => set('clinicAnniversary', e.target.value)} />
             

@@ -247,7 +247,7 @@ export default function VisitsPage() {
       )}
 
       {/* Filters */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm md:p-5">
         <div className="relative mb-4">
           <svg className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
@@ -260,14 +260,14 @@ export default function VisitsPage() {
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.value || 'all'}
               type="button"
               onClick={() => handleStatusFilter(f.value)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150',
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150',
                 status === f.value
                   ? 'bg-brand-light text-brand shadow-sm ring-2 ring-brand/20'
                   : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'
@@ -281,9 +281,9 @@ export default function VisitsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-sm">
+      <div className="rounded-2xl max-md:bg-transparent md:overflow-hidden md:border md:border-slate-200/80 md:bg-white md:shadow-sm">
+        <div className="md:overflow-x-auto">
+          <table className="responsive-table w-full min-w-[960px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
                 {[
@@ -353,13 +353,13 @@ export default function VisitsPage() {
                         : 'hover:bg-indigo-50/30'
                     )}
                   >
-                    <td className={cn(
+                    <td data-label="Date" className={cn(
                       'whitespace-nowrap px-5 py-4 font-semibold',
                       isPastPendingVisit ? 'text-rose-700' : 'text-slate-900'
                     )}>
                       {formatDate(v.visitDate)}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="cell-primary px-5 py-4">
                       <Link
                         href={`/doctors/${v.doctor?.slug}`}
                         className="font-semibold text-brand hover:text-brand-hover hover:underline"
@@ -370,10 +370,10 @@ export default function VisitsPage() {
                         {v.doctor?.area || v.doctor?.city} · {v.doctor?.speciality}
                       </p>
                     </td>
-                    <td className="px-5 py-4 text-slate-600">{v.visitType}</td>
-                    <td className="px-5 py-4 text-slate-600">{v.salesPerson?.name || '—'}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <td data-label="Type" className="px-5 py-4 text-slate-600">{v.visitType}</td>
+                    <td data-label="Sales Rep" className="px-5 py-4 text-slate-600">{v.salesPerson?.name || '—'}</td>
+                    <td data-label="Status" className="px-5 py-4">
+                      <div className="flex flex-wrap items-center justify-end gap-2 md:justify-start">
                         <span className={cn(
                           'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
                           STATUS_STYLES[v.status] || STATUS_STYLES.Cancelled
@@ -390,9 +390,9 @@ export default function VisitsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
+                    <td data-label="Follow-up" className="px-5 py-4">
                       {v.followUpDate ? (
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col items-end gap-1 md:items-start">
                           <span className={cn(
                             'text-sm font-medium',
                             isFollowUpPast ? 'text-rose-600' : 'text-slate-600'
@@ -410,8 +410,8 @@ export default function VisitsPage() {
                         <span className="text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                    <td className="cell-actions px-5 py-4">
+                      <div className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:justify-start">
                         <IconBtn href={`/visits/${v.slug}`} title="View details">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
@@ -467,7 +467,7 @@ export default function VisitsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-5 py-3.5">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 md:mt-0 md:rounded-none md:border-x-0 md:border-b-0 md:border-slate-100 md:bg-slate-50/50 md:px-5 md:py-3.5">
           <div className="flex items-center gap-3 text-sm text-slate-600">
             <span>Rows per page</span>
             <select

@@ -349,7 +349,7 @@ export default function NewVisitPage() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="input-label">Visit Date & Time *</label>
                 <input 
@@ -413,7 +413,7 @@ export default function NewVisitPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TextArea label="Key Discussion Points" id="keyDiscussionPoints" rows={3} value={form.keyDiscussionPoints} onChange={(e) => set('keyDiscussionPoints', e.target.value)} />
               <TextArea label="Doctor's Feedback" id="doctorFeedback" rows={3} value={form.doctorFeedback} onChange={(e) => set('doctorFeedback', e.target.value)} />
               <TextArea label="Objections Raised" id="objectionsRaised" rows={3} value={form.objectionsRaised} onChange={(e) => set('objectionsRaised', e.target.value)} />
@@ -425,7 +425,7 @@ export default function NewVisitPage() {
         {/* Step 2 - Follow-up & Actions */}
         {step === 2 && (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="input-label">Next Follow-up Date *</label>
                 <input type="date" className="input" value={form.followUpDate} onChange={(e) => set('followUpDate', e.target.value)} min={new Date().toISOString().split('T')[0]} required />
@@ -455,7 +455,7 @@ export default function NewVisitPage() {
         {step === 3 && (
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: 'var(--text-primary)' }}>Materials Shared</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12 }}>
+            <div className="mb-6 grid grid-cols-1 gap-4 rounded-xl bg-bg-secondary p-4 sm:grid-cols-2">
               <Toggle label="Brochures Given" checked={form.brochuresGiven} onChange={(c) => set('brochuresGiven', c)} />
               <Toggle label="Sample Kit Given" checked={form.sampleKitGiven} onChange={(c) => set('sampleKitGiven', c)} />
               <Toggle label="Price List Shared" checked={form.priceListShared} onChange={(c) => set('priceListShared', c)} />
@@ -465,7 +465,7 @@ export default function NewVisitPage() {
             </div>
 
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: 'var(--text-primary)' }}>Case Submissions</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="input-label">Last Case Received Date</label>
                 <input type="date" className="input" value={form.lastCaseReceivedDate} onChange={(e) => set('lastCaseReceivedDate', e.target.value)} />

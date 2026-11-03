@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider';
 import { usePathname } from 'next/navigation';
@@ -30,21 +31,36 @@ const PAGE_TITLES: Record<string, string> = {
   '/users': 'User Management',
   '/audit': 'Audit Trail',
   '/settings': 'Settings',
+  '/users/transfer': 'Transfer Sales Data',
 };
+
+const NESTED_PAGE_TITLES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^\/doctors\/[^/]+\/edit\/?$/, title: 'Edit Doctor' },
+  { pattern: /^\/doctors\/[^/]+\/?$/, title: 'Doctor Profile' },
+  { pattern: /^\/visits\/[^/]+\/?$/, title: 'Visit Details' },
+];
+
+const TOP_LEVEL_PATHS = ['/dashboard', '/doctors', '/visits', '/alerts', '/reports', '/dropdowns', '/users', '/audit', '/settings'];
+
+function getPageTitle(pathname: string): string {
+  return PAGE_TITLES[pathname] ?? NESTED_PAGE_TITLES.find((p) => p.pattern.test(pathname))?.title ?? 'DSR CMS';
+}
 
 export default function DashboardLayoutClient({ children, user }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const title = PAGE_TITLES[pathname] || 'DSR CMS';
+  const title = getPageTitle(pathname);
+  const showBack = !TOP_LEVEL_PATHS.includes(pathname);
+  const openMobileMenu = useCallback(() => setMobileOpen(true), []);
 
   // Collapse sidebar on tablet
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth < 1280 && window.innerWidth >= 768) {
         setCollapsed(true);
-      } else if (window.innerWidth >= 1280) {
+      } else {
         setCollapsed(false);
       }
     };
@@ -65,8 +81,8 @@ export default function DashboardLayoutClient({ children, user }: DashboardLayou
             onMobileClose={() => setMobileOpen(false)}
           />
           <div className={`main-content ${collapsed ? 'collapsed' : ''}`}>
-            <TopBar title={title} onMenuOpen={() => setMobileOpen(true)} />
-            <main className="relative min-h-screen p-6 lg:p-8">
+            <TopBar title={title} showBack={showBack} onMenuOpen={openMobileMenu} />
+            <main className="mobile-main relative min-h-screen px-4 pt-4 md:p-6 lg:p-8">
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
                 <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-violet-200/15 blur-3xl" />
@@ -74,6 +90,7 @@ export default function DashboardLayoutClient({ children, user }: DashboardLayou
               <div className="relative">{children}</div>
             </main>
           </div>
+          <MobileBottomNav user={user} onMoreOpen={openMobileMenu} />
         </div>
       </ConfirmProvider>
     </ToastProvider>

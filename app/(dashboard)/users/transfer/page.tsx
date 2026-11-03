@@ -31,8 +31,9 @@ export default function TransferSalesDataPage() {
   const [fromUserId, setFromUserId] = useState('');
   const [copyDoctors, setCopyDoctors] = useState(false);
   const [copyVisits, setCopyVisits] = useState(false);
-  const [counts, setCounts] = useState<TransferCounts | null>(null);
-  const [countsLoading, setCountsLoading] = useState(false);
+  const [loadedCounts, setLoadedCounts] = useState<{ userId: string; data: TransferCounts | null } | null>(null);
+  const counts = loadedCounts?.userId === fromUserId ? loadedCounts.data : null;
+  const countsLoading = Boolean(fromUserId) && loadedCounts?.userId !== fromUserId;
   const [transferring, setTransferring] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -61,16 +62,11 @@ export default function TransferSalesDataPage() {
   }, [ready, addToast]);
 
   useEffect(() => {
-    if (!fromUserId) {
-      setCounts(null);
-      return;
-    }
-    setCountsLoading(true);
+    if (!fromUserId) return;
     fetch(`/api/users/transfer?from=${fromUserId}`)
       .then((response) => response.json())
-      .then((data) => setCounts(data.data || null))
-      .catch(() => setCounts(null))
-      .finally(() => setCountsLoading(false));
+      .then((data) => setLoadedCounts({ userId: fromUserId, data: data.data || null }))
+      .catch(() => setLoadedCounts({ userId: fromUserId, data: null }));
   }, [fromUserId]);
 
   const destinationOptions = useMemo(

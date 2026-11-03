@@ -13,7 +13,7 @@ export default function StepIndicator({ current, total, labels }: { current: num
             <div className={`w-[30px] h-[30px] rounded-[15px] flex items-center justify-center font-semibold text-[13px] transition-all duration-300 border-2 ${active || passed ? 'bg-brand border-brand text-white' : 'bg-white border-border text-text-muted'}`}>
               {passed ? '✓' : i + 1}
             </div>
-            <span className={`text-xs ${active ? 'font-semibold text-text-primary' : 'font-normal text-text-muted'}`}>
+            <span className={`text-xs ${active ? 'font-semibold text-text-primary max-sm:max-w-[96px] max-sm:text-center' : 'font-normal text-text-muted max-sm:sr-only'}`}>
               {label}
             </span>
           </div>

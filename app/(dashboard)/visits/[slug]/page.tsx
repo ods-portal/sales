@@ -37,8 +37,8 @@ const STATUS_BADGE: Record<string, string> = {
 const BooleanRow = ({ label, value }: { label: string; value?: unknown }) => {
   if (value === undefined || value === null) return null;
   return (
-    <div className="flex gap-2 py-3 border-b border-border items-center">
-      <span className="min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
+    <div className="flex flex-col gap-1 py-3 border-b border-border sm:flex-row sm:items-center sm:gap-2">
+      <span className="sm:min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
       <span className={`text-sm ${value ? 'text-success' : 'text-text-muted'}`}>
         {value ? '✅ Yes' : '❌ No'}
       </span>
@@ -53,8 +53,8 @@ const InfoRow = ({ label, value, type = 'text' }: { label: string; value?: unkno
     displayValue = formatDate(value as string);
   }
   return (
-    <div className="flex gap-2 py-3 border-b border-border">
-      <span className="min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
+    <div className="flex flex-col gap-1 py-3 border-b border-border sm:flex-row sm:gap-2">
+      <span className="sm:min-w-[160px] text-[13px] text-text-secondary font-medium">{label}</span>
       <span className="text-sm text-text-primary font-medium flex-1">{displayValue}</span>
     </div>
   );
@@ -356,7 +356,7 @@ export default function VisitDetailPage() {
       )}
 
       {/* Details Split */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div className="card">
           <h2 className="text-sm font-bold text-text-muted uppercase tracking-[0.5px] mb-3">Doctor Details</h2>
           <div className="font-semibold text-base mb-1">
@@ -388,7 +388,7 @@ export default function VisitDetailPage() {
         
         <TextBlock label="Meeting Summary" value={visit.meetingSummary} />
         
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           {visit.keyDiscussionPoints && (
             <div>
               <span className="block text-[13px] text-text-secondary font-medium mb-2">Key Discussion Points</span>
@@ -417,7 +417,7 @@ export default function VisitDetailPage() {
       </div>
 
       {/* Deliverables & Case Submissions */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div className="card">
           <h2 className="text-base font-bold mb-4 flex items-center gap-2">
             📦 Deliverables Shared

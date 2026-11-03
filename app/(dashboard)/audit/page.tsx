@@ -61,7 +61,7 @@ export default function AuditPage() {
         </div>
       </div>
 
-      <div className="card card-sm mb-4 flex gap-2.5">
+      <div className="card card-sm mb-4 flex flex-col gap-2.5 sm:flex-row">
         <select className="input" value={entity} onChange={(e) => { setEntity(e.target.value); setPage(1); }}>
           <option value="">All Entities</option>
           {['User', 'Doctor', 'Visit', 'System'].map((e) => <option key={e} value={e}>{e}</option>)}
@@ -74,7 +74,7 @@ export default function AuditPage() {
 
       <div className="card p-0">
         <div className="table-container">
-          <table className="data-table">
+          <table className="data-table responsive-table">
             <thead>
               <tr>
                 <th>Time</th>
@@ -91,24 +91,24 @@ export default function AuditPage() {
                 ))
               ) : logs.map((log) => (
                 <tr key={log._id}>
-                  <td className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(log.createdAt)}</td>
-                  <td>
+                  <td data-label="Time" className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(log.createdAt)}</td>
+                  <td className="cell-primary">
                     <div className="font-semibold">{log.actorName}</div>
                     <div className="text-[11px] text-text-muted">{log.actorRole}</div>
                   </td>
-                  <td>
+                  <td data-label="Action">
                     <span className={ACTION_BADGE[log.action] || 'badge badge-gray'}>
                       {ACTION_ICONS[log.action]} {log.action}
                     </span>
                   </td>
-                  <td className="text-text-secondary">{log.entity}</td>
-                  <td className="text-[13px] text-text-secondary">{log.entityLabel || '—'}</td>
+                  <td data-label="Entity" className="text-text-secondary">{log.entity}</td>
+                  <td data-label="Label" className="text-[13px] text-text-secondary">{log.entityLabel || '—'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 border-t border-border flex justify-end gap-1">
+        <div className="px-4 py-3 border-t border-border flex justify-end gap-1 max-md:mt-3 max-md:items-center max-md:justify-between max-md:rounded-2xl max-md:border max-md:bg-white">
           <button className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>‹ Prev</button>
           <span className="px-3 py-1.5 text-[13px]">Page {page} / {totalPages}</span>
           <button className="btn btn-ghost btn-sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next ›</button>

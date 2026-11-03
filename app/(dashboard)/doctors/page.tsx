@@ -164,18 +164,18 @@ export default function DoctorsPage() {
           />
         </div>
 
-        <select className="input flex-[0_0_140px]" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
+        <select className="input flex-[1_1_40%] md:flex-[0_0_140px]" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
           {(dropdowns['doctorCategory'] || []).map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        <select className="input flex-[0_0_140px]" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+        <select className="input flex-[1_1_40%] md:flex-[0_0_140px]" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
           {(dropdowns['doctorStatus'] || []).map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
 
         <select
-          className="input flex-[0_0_160px]"
+          className="input flex-[1_1_40%] md:flex-[0_0_160px]"
           value={city}
           onChange={(e) => { setCity(e.target.value); setArea(''); setPage(1); }}
         >
@@ -184,7 +184,7 @@ export default function DoctorsPage() {
         </select>
 
         {city && (
-          <select className="input flex-[0_0_180px]" value={area} onChange={(e) => { setArea(e.target.value); setPage(1); }}>
+          <select className="input flex-[1_1_40%] md:flex-[0_0_180px]" value={area} onChange={(e) => { setArea(e.target.value); setPage(1); }}>
             <option value="">All Areas</option>
             {areaOptions.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
@@ -198,7 +198,7 @@ export default function DoctorsPage() {
       {/* Table */}
       <div className="card p-0">
         <div className="table-container">
-          <table className="data-table">
+          <table className="data-table responsive-table">
             <thead>
               <tr>
                 <th onClick={() => handleSort('name')}>Name{sortArrow('name')}</th>
@@ -233,26 +233,28 @@ export default function DoctorsPage() {
                 )
                 : doctors.map((doc) => (
                   <tr key={doc._id}>
-                    <td>
+                    <td className="cell-primary">
                       <Link href={`/doctors/${doc.slug}`} className="font-semibold text-brand no-underline">
                         {doc.name}
                       </Link>
                     </td>
-                    <td className="text-text-secondary">{doc.speciality}</td>
-                    <td><span className={CAT_BADGE[doc.category]}>{doc.category}</span></td>
-                    <td className="text-text-secondary">
-                      <div>{doc.city || '—'}</div>
-                      {doc.area && <div className="text-xs text-text-muted">{doc.area}</div>}
+                    <td data-label="Speciality" className="text-text-secondary">{doc.speciality}</td>
+                    <td data-label="Category"><span className={CAT_BADGE[doc.category]}>{doc.category}</span></td>
+                    <td data-label="City" className="text-text-secondary">
+                      <div>
+                        <div>{doc.city || '—'}</div>
+                        {doc.area && <div className="text-xs text-text-muted">{doc.area}</div>}
+                      </div>
                     </td>
-                    {!isSales && <td className="text-text-secondary text-[13px]">{doc.assignedRep?.name}</td>}
-                    <td>{doc.monthlyAlignerCases ?? '—'}</td>
-                    <td className="text-[13px] text-text-secondary">
+                    {!isSales && <td data-label="Assigned Rep" className="text-text-secondary text-[13px]">{doc.assignedRep?.name}</td>}
+                    <td data-label="Cases/mo">{doc.monthlyAlignerCases ?? '—'}</td>
+                    <td data-label="Last Follow Up" className="text-[13px] text-text-secondary">
                       {doc.lastVisitDate ? (
                         daysSince(doc.lastVisitDate) === 0 ? 'Today' : `${daysSince(doc.lastVisitDate)} days ago`
                       ) : '—'}
                     </td>
-                    <td className="text-text-muted text-xs">{formatDate(doc.createdAt)}</td>
-                    <td>
+                    <td data-label="Added" className="text-text-muted text-xs">{formatDate(doc.createdAt)}</td>
+                    <td className="cell-actions">
                       <div className="flex gap-1">
                         <Link href={`/doctors/${doc.slug}`} className="btn btn-ghost btn-sm" title="View">👁</Link>
                         {canEdit && (

@@ -267,9 +267,9 @@ export default function UsersPage() {
         />
       </Card>
 
-      <Card className="overflow-hidden p-0">
-        <div className="table-container overflow-x-hidden">
-          <table className="data-table w-full text-[11px] [&_td]:px-2 [&_td]:py-2 [&_th]:px-2 [&_th]:py-2 [&_th]:text-[10px]">
+      <Card className="p-0 md:overflow-hidden">
+        <div className="table-container md:overflow-x-hidden">
+          <table className="data-table responsive-table w-full text-[11px] [&_td]:px-2 [&_td]:py-2 [&_th]:px-2 [&_th]:py-2 [&_th]:text-[10px]">
             <thead>
               <tr>
                 <th>Name</th>
@@ -305,16 +305,16 @@ export default function UsersPage() {
                   const busy = actionUserId === u._id;
                   return (
                     <tr key={u._id}>
-                      <td className="max-w-[100px] truncate font-medium">{u.name}</td>
-                      <td className="max-w-[140px] truncate text-[11px] text-text-secondary" title={u.email}>
+                      <td className="cell-primary max-w-[100px] truncate font-medium max-md:max-w-none">{u.name}</td>
+                      <td data-label="Email" className="max-w-[140px] truncate text-[11px] text-text-secondary max-md:max-w-none max-md:text-[13px]" title={u.email}>
                         {u.email}
                       </td>
-                      <td>
+                      <td data-label="Role">
                         <span className={`${ROLE_BADGE[u.role] || 'badge badge-gray'} !px-2 !py-0.5 !text-[10px]`}>
                           {ROLE_LABEL[u.role] || u.role}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Write access">
                         {u.role === 'admin' ? (
                           <Toggle
                             checked={u.hasWriteAccess}
@@ -325,21 +325,21 @@ export default function UsersPage() {
                           <span className="text-[10px] text-text-muted">—</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <span className={`${u.status === 'active' ? 'badge badge-green' : 'badge badge-red'} !px-2 !py-0.5 !text-[10px]`}>
                           {u.status === 'active' ? 'Active' : 'Blocked'}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap text-[10px] text-text-muted">
+                      <td data-label="Last login" className="whitespace-nowrap text-[10px] text-text-muted max-md:text-xs">
                         {u.lastLogin ? formatDate(u.lastLogin) : 'Never'}
                       </td>
-                      <td className="whitespace-nowrap text-[10px] text-text-muted">{formatDate(u.createdAt)}</td>
-                      <td>
+                      <td data-label="Created" className="whitespace-nowrap text-[10px] text-text-muted max-md:text-xs">{formatDate(u.createdAt)}</td>
+                      <td className={manageable ? 'cell-actions' : 'cell-hide-mobile'}>
                         {manageable ? (
-                          <div className="flex items-center gap-0.5">
+                          <div className="flex items-center gap-0.5 max-md:gap-2">
                             <button
                               type="button"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand disabled:opacity-50"
+                              className="inline-flex h-7 w-7 items-center max-md:h-10 max-md:w-10 max-md:ring-1 max-md:ring-slate-200 justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand disabled:opacity-50"
                               title="Change email"
                               disabled={busy}
                               onClick={() => openEditEmail(u)}
@@ -348,7 +348,7 @@ export default function UsersPage() {
                             </button>
                             <button
                               type="button"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                              className="inline-flex h-7 w-7 items-center max-md:h-10 max-md:w-10 max-md:ring-1 max-md:ring-slate-200 justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-50"
                               title={u.status === 'active' ? 'Block login' : 'Unblock login'}
                               disabled={busy}
                               onClick={() => toggleBlock(u)}
@@ -361,7 +361,7 @@ export default function UsersPage() {
                             </button>
                             <button
                               type="button"
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-rose-500 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                              className="inline-flex h-7 w-7 items-center max-md:h-10 max-md:w-10 max-md:ring-1 max-md:ring-slate-200 justify-center rounded-md text-rose-500 transition-colors hover:bg-rose-50 disabled:opacity-50"
                               title="Delete user"
                               disabled={busy}
                               onClick={() => deleteUser(u)}
@@ -380,7 +380,7 @@ export default function UsersPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex justify-end gap-1 border-t border-border px-4 py-3">
+        <div className="flex justify-end gap-1 px-4 py-3 max-md:mt-3 max-md:items-center max-md:justify-between max-md:rounded-2xl max-md:border max-md:border-border max-md:bg-white md:border-t md:border-border">
           <button type="button" className="btn btn-ghost btn-sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
             ‹ Prev
           </button>

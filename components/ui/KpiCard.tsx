@@ -25,7 +25,7 @@ export default function KpiCard({ label, value, hint, accent = 'indigo', icon, l
 
   if (loading) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm max-md:p-4">
         <div className="skeleton mb-3 h-3 w-[40%]" />
         <div className="skeleton mb-2 h-8 w-[55%]" />
         <div className="skeleton h-2.5 w-[45%]" />
@@ -36,19 +36,19 @@ export default function KpiCard({ label, value, hint, accent = 'indigo', icon, l
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg',
+        'group relative overflow-hidden rounded-2xl border border-white/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg max-md:p-4',
         style.glow
       )}
     >
       <div className={cn('absolute inset-x-0 top-0 h-1', style.bar)} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
-          <div className="text-3xl font-extrabold tracking-tight text-slate-900">{value}</div>
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 max-md:text-[10px] max-md:tracking-wide">{label}</div>
+          <div className="text-2xl font-extrabold md:text-3xl tracking-tight text-slate-900">{value}</div>
           {hint && <div className="mt-1.5 text-xs text-slate-400">{hint}</div>}
         </div>
         {icon && (
-          <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', style.icon)}>
+          <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl max-md:h-8 max-md:w-8', style.icon)}>
             {icon}
           </div>
         )}

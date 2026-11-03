@@ -709,7 +709,7 @@ export default function ReportsPage() {
             Visits ({preview.visits.length})
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="responsive-table w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-3">Date</th>
@@ -723,15 +723,15 @@ export default function ReportsPage() {
               <tbody>
                 {preview.visits.map((visit, index) => (
                   <tr key={`${visit.visitDate}-${visit.doctorName}-${index}`} className="border-b border-slate-100 last:border-0">
-                    <td className="py-2.5 pr-3 whitespace-nowrap">{visit.visitDate}</td>
-                    <td className="py-2.5 pr-3">
+                    <td data-label="Date" className="py-2.5 pr-3 whitespace-nowrap">{visit.visitDate}</td>
+                    <td className="cell-primary py-2.5 pr-3">
                       <div className="font-medium text-slate-900">{visit.doctorName}</div>
                       <div className="text-xs text-slate-500">{visit.doctorArea && visit.doctorArea !== '—' ? visit.doctorArea : visit.doctorCity} · {visit.doctorSpeciality}</div>
                     </td>
-                    <td className="py-2.5 pr-3">{visit.visitType}</td>
-                    <td className="py-2.5 pr-3">{visit.salesPerson}</td>
-                    <td className="py-2.5 pr-3">{visit.status}</td>
-                    <td className="py-2.5 whitespace-nowrap">{visit.followUpDate}</td>
+                    <td data-label="Type" className="py-2.5 pr-3">{visit.visitType}</td>
+                    <td data-label="Rep" className="py-2.5 pr-3">{visit.salesPerson}</td>
+                    <td data-label="Status" className="py-2.5 pr-3">{visit.status}</td>
+                    <td data-label="Follow-up" className="py-2.5 whitespace-nowrap">{visit.followUpDate}</td>
                   </tr>
                 ))}
               </tbody>
@@ -741,7 +741,7 @@ export default function ReportsPage() {
       )}
 
       {/* Report type cards */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-4">
         {REPORT_TYPES.map((r) => (
           <Card key={r.range} hover>
             <div className="mb-3 flex items-start justify-between">

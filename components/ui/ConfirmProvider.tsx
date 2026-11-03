@@ -41,7 +41,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       {children}
 
       {dialog && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center md:items-center">
           {/* Backdrop */}
           <div
             onClick={() => handleClose(false)}
@@ -49,22 +49,22 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           />
 
           {/* Dialog */}
-          <div className="relative bg-bg-primary rounded-2xl py-7 px-8 w-full max-w-[420px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] border border-border animate-[confirmSlideIn_0.2s_ease-out]">
+          <div className="relative w-full rounded-t-3xl border border-border bg-bg-primary px-5 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[confirmSlideIn_0.2s_ease-out] md:max-w-[420px] md:rounded-2xl md:px-8 md:py-7">
             <div className="text-lg font-bold mb-2">
               {dialog.title || 'Confirm Action'}
             </div>
             <div className="text-sm text-text-secondary leading-[1.6] mb-6">
               {dialog.message}
             </div>
-            <div className="flex justify-end gap-2.5">
+            <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
               <button
-                className="btn btn-secondary btn-sm min-w-[80px]"
+                className="btn btn-secondary btn-sm min-w-[80px] max-sm:w-full max-sm:justify-center"
                 onClick={() => handleClose(false)}
               >
                 {dialog.cancelText || 'Cancel'}
               </button>
               <button
-                className={`btn btn-sm min-w-[80px] ${dialog.danger ? 'btn-danger' : 'btn-primary'}`}
+                className={`btn btn-sm min-w-[80px] max-sm:w-full max-sm:justify-center ${dialog.danger ? 'btn-danger' : 'btn-primary'}`}
                 onClick={() => handleClose(true)}
                 autoFocus
               >
