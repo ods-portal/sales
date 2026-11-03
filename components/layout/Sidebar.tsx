@@ -180,22 +180,32 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
         )}
       >
         {/* Header */}
-        <div className="flex min-h-[68px] items-center justify-between border-b border-white/10 px-4">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+        <div
+          className={cn(
+            'flex min-h-[72px] items-center border-b border-[var(--sidebar-border)] px-4',
+            collapsed ? 'flex-col justify-center gap-2 px-2 py-3' : 'justify-between'
+          )}
+        >
+          <Link
+            href="/dashboard"
+            className="flex min-w-0 items-center gap-3 overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+            aria-label="DSR CMS home"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
               <Activity className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <div className="truncate text-[15px] font-bold tracking-tight text-white">DSR CMS</div>
-                <div className="text-[10px] font-medium uppercase tracking-widest text-indigo-300/70">Sales Portal</div>
+                <div className="truncate text-[15px] font-semibold tracking-tight text-white">DSR CMS</div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">Sales Portal</div>
               </div>
             )}
-          </div>
+          </Link>
           <button
+            type="button"
             onClick={() => onCollapse(!collapsed)}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label="Toggle sidebar"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--sidebar-border)] bg-white/[0.03] text-slate-400 transition-all duration-200 ease-in-out hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400 active:scale-95"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -203,36 +213,54 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
 
         {/* Search */}
         {!collapsed && (
-          <div className="mx-3 mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+          <label className="mx-3 mt-4 flex cursor-text items-center gap-2 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg-elevated)] px-3 py-2.5 transition-all duration-200 ease-in-out focus-within:border-indigo-400/60 focus-within:bg-white/[0.06] focus-within:ring-2 focus-within:ring-indigo-500/20 hover:border-white/20">
             <Search className="h-4 w-4 shrink-0 text-slate-500" />
+            <span className="sr-only">Search</span>
             <input
               type="text"
               placeholder="Search..."
-              className="w-full border-none bg-transparent text-[13px] text-slate-300 outline-none placeholder:text-slate-600"
+              className="w-full border-none bg-transparent text-[13px] text-slate-200 outline-none placeholder:text-slate-500"
             />
-          </div>
+          </label>
         )}
 
         {/* Nav */}
-        <div className="sidebar-nav flex-1 overflow-y-auto py-3">
+        <div className="sidebar-nav flex-1 overflow-y-auto px-0 py-3">
           {NAV.filter(canSeeSection).map((section) => {
             const isOpen = collapsed || expandedSections.includes(section.title);
             const panelId = `sidebar-section-${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+            const visibleItems = section.items.filter(canSeeItem);
+            const hasActiveItem = visibleItems.some((item) => isActive(item.href));
             return (
-              <div key={section.title}>
+              <div key={section.title} className={cn(collapsed ? 'border-b border-[var(--sidebar-border)] py-1.5 last:border-0' : 'mb-1')}>
                 {!collapsed && (
                   <button
                     type="button"
-                    className="group/section flex w-full items-center justify-between rounded-lg px-4 py-2 text-left transition-colors duration-200 ease-in-out hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+                    className="group/section mx-3 flex w-[calc(100%-24px)] items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition-colors duration-200 ease-in-out hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
                     onClick={() => toggleSection(section.title)}
                     aria-expanded={isOpen}
                     aria-controls={panelId}
                   >
-                    <span className="sidebar-section-header !p-0 transition-colors duration-200 group-hover/section:text-slate-300">{section.title}</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={cn(
+                          'sidebar-section-header truncate !p-0 transition-colors duration-200 group-hover/section:text-slate-300',
+                          isOpen && 'text-slate-300'
+                        )}
+                      >
+                        {section.title}
+                      </span>
+                      {hasActiveItem && !isOpen && (
+                        <>
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" aria-hidden="true" />
+                          <span className="sr-only">(contains current page)</span>
+                        </>
+                      )}
+                    </span>
                     <ChevronDown
                       className={cn(
-                        'h-3.5 w-3.5 text-slate-600 transition-transform duration-300 ease-in-out group-hover/section:text-slate-400 motion-reduce:transition-none',
-                        isOpen && 'rotate-180'
+                        'h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform duration-300 ease-in-out group-hover/section:text-slate-300 motion-reduce:transition-none',
+                        isOpen && 'rotate-180 text-slate-300'
                       )}
                     />
                   </button>
@@ -247,7 +275,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
                 >
                   <div className="min-h-0 overflow-hidden">
                     <div className="pb-1">
-                      {section.items.filter(canSeeItem).map((item) => {
+                      {visibleItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.href);
                         return (
@@ -256,18 +284,19 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
                             href={item.href}
                             className={cn('sidebar-nav-item group', active && 'active')}
                             title={collapsed ? item.label : undefined}
+                            aria-current={active ? 'page' : undefined}
                             onClick={() => {
                               if (window.innerWidth < 768) onMobileClose();
                             }}
                           >
                             <Icon
                               className={cn(
-                                'h-[18px] w-[18px] shrink-0 transition-colors',
-                                active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
+                                'h-[18px] w-[18px] shrink-0 transition-colors duration-200',
+                                active ? 'text-indigo-300' : 'text-slate-500 group-hover:text-slate-200'
                               )}
                               strokeWidth={active ? 2.25 : 1.75}
                             />
-                            {!collapsed && <span>{item.label}</span>}
+                            {!collapsed && <span className="truncate">{item.label}</span>}
                           </Link>
                         );
                       })}
@@ -280,22 +309,33 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/10 p-3">
-          <div className="flex items-center gap-3 rounded-xl bg-white/5 p-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-sm font-bold text-white">
-              {user.name.charAt(0).toUpperCase()}
+        <div className="border-t border-[var(--sidebar-border)] p-3">
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg-elevated)] p-2.5 transition-colors duration-200 hover:bg-white/[0.06]',
+              collapsed && 'justify-center border-transparent bg-transparent p-1.5'
+            )}
+          >
+            <div className="relative shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-sm font-semibold text-white ring-2 ring-white/10">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[var(--sidebar-bg)]" aria-hidden="true" />
             </div>
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold text-white">{user.name}</div>
-                  <div className="text-[11px] text-slate-500">{roleLabel[user.role]}</div>
+                  <span className="mt-0.5 inline-flex items-center rounded-md bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-300 ring-1 ring-indigo-400/20">
+                    {roleLabel[user.role]}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={logout}
-                  className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-rose-500/10 hover:text-rose-400"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-all duration-200 ease-in-out hover:bg-rose-500/10 hover:text-rose-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400 active:scale-95"
                   title="Logout"
+                  aria-label="Logout"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -306,8 +346,9 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
             <button
               type="button"
               onClick={logout}
-              className="mt-2 flex w-full items-center justify-center rounded-lg p-2 text-slate-500 hover:text-rose-400"
+              className="mt-2 flex h-10 w-full items-center justify-center rounded-lg text-slate-400 transition-all duration-200 ease-in-out hover:bg-rose-500/10 hover:text-rose-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400 active:scale-95"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="h-4 w-4" />
             </button>
