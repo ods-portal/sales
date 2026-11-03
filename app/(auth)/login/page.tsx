@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [shake, setShake] = useState(false);
   const [valuePropIndex, setValuePropIndex] = useState(0);
   const [valuePropVisible, setValuePropVisible] = useState(true);
@@ -35,6 +36,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || isRedirecting) return;
     setError('');
     setLoading(true);
     try {
@@ -48,15 +50,18 @@ export default function LoginPage() {
         setError(data.error || 'Login failed');
         setShake(true);
         setTimeout(() => setShake(false), 500);
-      } else {
-        router.push('/dashboard');
+        setLoading(false);
+        return;
       }
+      setIsRedirecting(true);
+      router.replace('/dashboard');
     } catch {
       setError('Network error. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
+
+  const isBusy = loading || isRedirecting;
 
   return (
     <div className="login-page">
@@ -167,8 +172,8 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary btn-full btn-lg mt-5" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+            <button type="submit" className="btn btn-primary btn-full btn-lg mt-5" disabled={isBusy} aria-busy={isBusy}>
+              {isRedirecting ? 'Redirecting...' : loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
