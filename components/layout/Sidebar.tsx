@@ -212,7 +212,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
         </div>
 
         {/* Search */}
-        {!collapsed && (
+        {/* {!collapsed && (
           <label className="mx-3 mt-4 flex cursor-text items-center gap-2 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg-elevated)] px-3 py-2.5 transition-all duration-200 ease-in-out focus-within:border-indigo-400/60 focus-within:bg-white/[0.06] focus-within:ring-2 focus-within:ring-indigo-500/20 hover:border-white/20">
             <Search className="h-4 w-4 shrink-0 text-slate-500" />
             <span className="sr-only">Search</span>
@@ -222,7 +222,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
               className="w-full border-none bg-transparent text-[13px] text-slate-200 outline-none placeholder:text-slate-500"
             />
           </label>
-        )}
+        )} */}
 
         {/* Nav */}
         <div className="sidebar-nav flex-1 overflow-y-auto px-0 py-3">
@@ -326,7 +326,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
               <>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold text-white">{user.name}</div>
-                  <span className="mt-0.5 inline-flex items-center rounded-md bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-300 ring-1 ring-indigo-400/20">
+                  <span className="mt-0.5 inline-block max-w-full truncate whitespace-nowrap rounded-md bg-indigo-500/15 px-1.5 py-0.5 text-[11px] font-medium text-indigo-200 ring-1 ring-indigo-400/20">
                     {roleLabel[user.role]}
                   </span>
                 </div>
