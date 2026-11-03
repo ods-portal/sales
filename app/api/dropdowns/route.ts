@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { getAuthUser, canWrite } from '@/lib/auth';
 import Dropdown from '@/models/Dropdown';
 import { indianStateDropdowns } from '@/lib/indiaStates';
 import { NextRequest } from 'next/server';
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const user = await getAuthUser();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!canWrite(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await request.json();
 
@@ -123,6 +124,7 @@ export async function PUT(request: NextRequest) {
     await connectDB();
     const user = await getAuthUser();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!canWrite(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await request.json();
     const { id, label, value } = body;
@@ -162,6 +164,7 @@ export async function DELETE(request: NextRequest) {
     await connectDB();
     const user = await getAuthUser();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!canWrite(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

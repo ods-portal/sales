@@ -220,13 +220,15 @@ export default function VisitsPage() {
               : `${meta.totalCount} total visits logged`}
           </p>
         </div>
-        <Link
-          href="/visits/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-all hover:bg-brand-hover hover:shadow-lg hover:shadow-indigo-200 active:scale-[0.98]"
-        >
-          <span className="text-lg leading-none">+</span>
-          Log New Visit
-        </Link>
+        {canUpdateStatus && (
+          <Link
+            href="/visits/new"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition-all hover:bg-brand-hover hover:shadow-lg hover:shadow-indigo-200 active:scale-[0.98]"
+          >
+            <span className="text-lg leading-none">+</span>
+            Log New Visit
+          </Link>
+        )}
       </div>
 
       {/* Pending banner */}

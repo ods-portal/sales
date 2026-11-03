@@ -9,7 +9,7 @@ import {
 import {
   Stethoscope, Calendar, Clock, AlertTriangle, TrendingUp, Plus, ArrowRight,
 } from 'lucide-react';
-import { formatDate, daysSince } from '@/lib/utils';
+import { formatDate, daysSince, canCreateRecords, type PermissionUser } from '@/lib/utils';
 import PageShell from '@/components/ui/PageShell';
 import PageHeader from '@/components/ui/PageHeader';
 import KpiCard from '@/components/ui/KpiCard';
@@ -54,8 +54,13 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [trendRange, setTrendRange] = useState<'7' | '14' | '30'>('30');
+  const [currentUser, setCurrentUser] = useState<PermissionUser | null>(null);
 
   useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.user) setCurrentUser(d.user); })
+      .catch(() => setCurrentUser(null));
     fetch('/api/dashboard')
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
@@ -71,9 +76,11 @@ export default function DashboardPage() {
         subtitle="Your sales intelligence at a glance"
         icon={<TrendingUp className="h-5 w-5" />}
         actions={
-          <Link href="/visits/new" className="btn btn-primary">
-            <Plus className="h-4 w-4" /> Log New Visit
-          </Link>
+          canCreateRecords(currentUser) ? (
+            <Link href="/visits/new" className="btn btn-primary">
+              <Plus className="h-4 w-4" /> Log New Visit
+            </Link>
+          ) : undefined
         }
       />
 

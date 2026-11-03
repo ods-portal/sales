@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell, AlertTriangle, ArrowRight } from 'lucide-react';
-import { formatDate, daysSince } from '@/lib/utils';
+import { formatDate, daysSince, canCreateRecords, type PermissionUser } from '@/lib/utils';
 import PageShell from '@/components/ui/PageShell';
 import PageHeader from '@/components/ui/PageHeader';
 import Card from '@/components/ui/Card';
@@ -22,8 +22,13 @@ interface OverdueVisit {
 export default function AlertsPage() {
   const [overdueList, setOverdueList] = useState<OverdueVisit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<PermissionUser | null>(null);
 
   useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.user) setCurrentUser(d.user); })
+      .catch(() => setCurrentUser(null));
     fetch('/api/dashboard').then((r) => r.json()).then((d) => {
       setOverdueList(d.overdueList || []);
       setLoading(false);
@@ -93,9 +98,11 @@ export default function AlertsPage() {
                       <Link href={`/visits/${v.slug}`} className="btn btn-secondary btn-sm">
                         View <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
-                      <Link href={`/visits/new?doctor=${v.doctor?.slug}`} className="btn btn-primary btn-sm">
-                        Log Follow-up
-                      </Link>
+                      {canCreateRecords(currentUser) && (
+                        <Link href={`/visits/new?doctor=${v.doctor?.slug}`} className="btn btn-primary btn-sm">
+                          Log Follow-up
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

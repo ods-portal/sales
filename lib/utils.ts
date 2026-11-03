@@ -72,6 +72,22 @@ export function isValidAreaForCity(city: string, area: string): boolean {
   return areaOptionsForCity(city).includes(area.trim());
 }
 
+export interface PermissionUser {
+  role: string;
+  hasWriteAccess?: boolean;
+}
+
+export function hasWriteAccess(user?: PermissionUser | null): boolean {
+  if (!user) return false;
+  return user.role === 'superAdmin' || (user.role === 'admin' && Boolean(user.hasWriteAccess));
+}
+
+/** Sales persons log their own doctors and visits; admins need write access. */
+export function canCreateRecords(user?: PermissionUser | null): boolean {
+  if (!user) return false;
+  return user.role === 'salesPerson' || hasWriteAccess(user);
+}
+
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
 }

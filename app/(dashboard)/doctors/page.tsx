@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { areaOptionsForCity, formatDate, daysSince } from '@/lib/utils';
+import { areaOptionsForCity, formatDate, daysSince, canCreateRecords } from '@/lib/utils';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
 
@@ -82,6 +82,7 @@ export default function DoctorsPage() {
 
   const isSales = currentUser?.role === 'salesPerson';
   const canEdit = currentUser?.role === 'superAdmin' || (currentUser?.role === 'admin' && currentUser?.hasWriteAccess);
+  const canCreate = canCreateRecords(currentUser);
   const colCount = isSales ? 8 : 9;
 
   const fetchDoctors = useCallback(async () => {
@@ -147,7 +148,7 @@ export default function DoctorsPage() {
           <h1 className="page-title">Doctor Management</h1>
           <p className="page-subtitle">{meta.totalCount} total doctors</p>
         </div>
-        <Link href="/doctors/new" className="btn btn-primary">+ Add New Doctor</Link>
+        {canCreate && <Link href="/doctors/new" className="btn btn-primary">+ Add New Doctor</Link>}
       </div>
 
       {/* Filters */}
@@ -226,7 +227,7 @@ export default function DoctorsPage() {
                     <td colSpan={colCount} className="text-center py-[60px] text-text-muted">
                       <div className="text-[32px] mb-2">🏥</div>
                       <div className="font-semibold">{hasFilters ? 'No doctors match these filters' : 'No doctors added yet'}</div>
-                      {!hasFilters && <Link href="/doctors/new" className="btn btn-primary btn-sm mt-3 inline-flex">Add First Doctor</Link>}
+                      {!hasFilters && canCreate && <Link href="/doctors/new" className="btn btn-primary btn-sm mt-3 inline-flex">Add First Doctor</Link>}
                     </td>
                   </tr>
                 )

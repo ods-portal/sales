@@ -67,6 +67,10 @@ export function canWrite(user: JWTPayload): boolean {
   return false;
 }
 
+export function canCreateRecords(user: JWTPayload): boolean {
+  return user.role === 'salesPerson' || canWrite(user);
+}
+
 export function isSuperAdmin(user: JWTPayload): boolean {
   return user.role === 'superAdmin';
 }

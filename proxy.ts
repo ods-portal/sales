@@ -78,6 +78,20 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/dropdowns')) {
+    if (user.role !== 'superAdmin' && user.role !== 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
+  const isWriter =
+    user.role === 'superAdmin' || (user.role === 'admin' && user.hasWriteAccess);
+  const isCreatePage = pathname === '/doctors/new' || pathname === '/visits/new';
+  const isDoctorEditPage = /^\/doctors\/[^/]+\/edit\/?$/.test(pathname);
+  if ((isCreatePage && user.role !== 'salesPerson' && !isWriter) || (isDoctorEditPage && !isWriter)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
   if (pathname.startsWith('/admin')) {
     const canAccess =
       user.role === 'superAdmin' || (user.role === 'admin' && user.hasWriteAccess);

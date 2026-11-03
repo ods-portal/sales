@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { formatDate, formatDateTime, daysSince } from '@/lib/utils';
+import { formatDate, formatDateTime, daysSince, canCreateRecords } from '@/lib/utils';
 
 type TabKey = 'profile' | 'practice' | 'categorization' | 'opportunity' | 'competitor' | 'attachments' | 'additional' | 'visits';
 
@@ -121,7 +121,9 @@ export default function DoctorDetailPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary">+ Log Visit</Link>
+            {canCreateRecords(currentUser) && (
+              <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary">+ Log Visit</Link>
+            )}
             {currentUser && (currentUser.role === 'superAdmin' || (currentUser.role === 'admin' && currentUser.hasWriteAccess)) && (
               <Link href={`/doctors/${slug}/edit`} className="btn btn-secondary">Edit</Link>
             )}
@@ -294,7 +296,9 @@ export default function DoctorDetailPage() {
                 <div className="text-center py-10 text-text-muted">
                   <div className="text-[32px] mb-2">📅</div>
                   <div className="font-semibold">No visits logged yet</div>
-                  <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary btn-sm mt-3 inline-flex">Log First Visit</Link>
+                  {canCreateRecords(currentUser) && (
+                    <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary btn-sm mt-3 inline-flex">Log First Visit</Link>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">

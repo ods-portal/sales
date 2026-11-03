@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { getAuthUser, canCreateRecords } from '@/lib/auth';
 import { generateUniqueSlug, paginationMeta } from '@/lib/utils';
 import { resolveAssignedRepsForDoctors, buildSalesPersonDoctorFilter } from '@/lib/resolveRep';
 import Doctor from '@/models/Doctor';
@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const user = await getAuthUser();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!canCreateRecords(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await request.json();
 

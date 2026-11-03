@@ -68,13 +68,13 @@ const NAV: NavSection[] = [
     title: 'Doctor Management',
     items: [
       { label: 'All Doctors', href: '/doctors', icon: Stethoscope },
-      { label: 'Add New Doctor', href: '/doctors/new', icon: UserPlus },
+      { label: 'Add New Doctor', href: '/doctors/new', icon: UserPlus, requireWrite: true },
     ],
   },
   {
     title: 'Visit Management',
     items: [
-      { label: 'Log New Visit', href: '/visits/new', icon: PenLine },
+      { label: 'Log New Visit', href: '/visits/new', icon: PenLine, requireWrite: true },
       { label: 'All Visits', href: '/visits', icon: Calendar },
       { label: 'Pending Visits', href: '/visits?status=Pending', icon: Clock },
     ],
@@ -87,6 +87,7 @@ const NAV: NavSection[] = [
   },
   {
     title: 'Configuration',
+    roles: ['admin', 'superAdmin'],
     items: [
       { label: 'Dropdown Manager', href: '/dropdowns', icon: Settings2 },
       { label: 'Cron Jobs', href: '/admin/crons', icon: Timer, requireWrite: true },

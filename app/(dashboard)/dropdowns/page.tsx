@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useConfirm } from '@/components/ui/ConfirmProvider';
+import { hasWriteAccess } from '@/lib/utils';
 
 interface DropdownItem {
   _id: string;
@@ -76,7 +77,7 @@ export default function DropdownsPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const canEdit = Boolean(currentUser);
+  const canEdit = hasWriteAccess(currentUser);
 
   const handleAdd = async () => {
     if (!newLabel || !newValue || !activeGroup) return;
@@ -147,7 +148,11 @@ export default function DropdownsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">⚙️ Dropdown Manager</h1>
-          <p className="page-subtitle">Manage configurable options used across the application</p>
+          <p className="page-subtitle">
+            {currentUser && !canEdit
+              ? 'View configurable options. You need write access to add, edit, or delete them.'
+              : 'Manage configurable options used across the application'}
+          </p>
         </div>
       </div>
 

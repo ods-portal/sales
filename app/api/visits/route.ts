@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { getAuthUser, canCreateRecords } from '@/lib/auth';
 import { generateUniqueSlug, paginationMeta } from '@/lib/utils';
 import { buildSalesPersonVisitFilter, resolveSalesPersonsForVisits } from '@/lib/resolveRep';
 import Visit from '@/models/Visit';
@@ -82,8 +82,9 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const user = await getAuthUser();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!canCreateRecords(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    // All roles can log visits (Sales Person for their doctors, others for any)
+    // Sales persons log visits for their doctors; admins need write access
     const body = await request.json();
 
     if (!body.meetingSummary || body.meetingSummary.length < 500) {
