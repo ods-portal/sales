@@ -68,6 +68,12 @@ const REPORT_TYPES: {
   { range: 'monthly', title: 'Monthly Report', desc: 'Monthly KPIs, conversion rates, and rankings.', badge: 'This Month' },
 ];
 
+function doctorMatchesLocation(doctor: FilterDoctor, city: string, area: string) {
+  if (city && doctor.city !== city) return false;
+  if (area && doctor.area !== area) return false;
+  return true;
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -246,6 +252,18 @@ export default function ReportsPage() {
     return parts;
   }, [appliedDoctorId, appliedSalesPersonId, appliedCity, appliedArea, doctors, salesPersons]);
 
+  const visibleDoctors = useMemo(
+    () => doctors.filter((d) => doctorMatchesLocation(d, city, area)),
+    [doctors, city, area]
+  );
+
+  const handleLocationChange = (nextCity: string, nextArea: string) => {
+    setCity(nextCity);
+    setArea(nextArea);
+    const selected = doctors.find((d) => d.id === doctorId);
+    if (selected && !doctorMatchesLocation(selected, nextCity, nextArea)) setDoctorId('');
+  };
+
   const hasPendingFilters =
     doctorId !== appliedDoctorId ||
     salesPersonId !== appliedSalesPersonId ||
@@ -364,7 +382,7 @@ export default function ReportsPage() {
     <PageShell wide>
       <PageHeader
         title="Reports"
-        subtitle="Export performance reports with doctor, sales rep, city, and area filters"
+        subtitle="Export performance reports with city, area, doctor, and sales rep filters"
         icon={<BarChart3 className="h-5 w-5" />}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -397,10 +415,40 @@ export default function ReportsPage() {
           <h3 className="text-base font-bold text-slate-900">Report Filters</h3>
         </div>
         <p className="mb-4 text-sm text-slate-500">
-          Filter by doctor, sales rep, or city. Area options appear after a city is selected.
+          Select a city first to see its areas. The doctor list narrows to the selected city and area.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label className="input-label" htmlFor="filter-city">City</label>
+            <select
+              id="filter-city"
+              className="input"
+              value={city}
+              onChange={(e) => handleLocationChange(e.target.value, '')}
+            >
+              <option value="">All cities</option>
+              {cities.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+          {city && (
+            <div>
+              <label className="input-label" htmlFor="filter-area">Area</label>
+              <select
+                id="filter-area"
+                className="input"
+                value={area}
+                onChange={(e) => handleLocationChange(city, e.target.value)}
+              >
+                <option value="">All areas</option>
+                {areaOptionsForCity(city).map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="input-label" htmlFor="filter-doctor">Doctor</label>
             <select
@@ -409,8 +457,8 @@ export default function ReportsPage() {
               value={doctorId}
               onChange={(e) => setDoctorId(e.target.value)}
             >
-              <option value="">All doctors</option>
-              {doctors.map((d) => (
+              <option value="">{city ? `All doctors in ${area || city}` : 'All doctors'}</option>
+              {visibleDoctors.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}{(d.area || d.city) ? ` · ${d.area || d.city}` : ''}
                 </option>
@@ -431,39 +479,6 @@ export default function ReportsPage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="input-label" htmlFor="filter-city">City</label>
-            <select
-              id="filter-city"
-              className="input"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setArea('');
-              }}
-            >
-              <option value="">All cities</option>
-              {cities.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          {city && (
-            <div>
-              <label className="input-label" htmlFor="filter-area">Area</label>
-              <select
-                id="filter-area"
-                className="input"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-              >
-                <option value="">All areas</option>
-                {areaOptionsForCity(city).map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-          )}
           <div className="flex items-end gap-2">
             <button
               type="button"
