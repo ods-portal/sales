@@ -88,13 +88,21 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { city: { $regex: search, $options: 'i' } },
-        { area: { $regex: search, $options: 'i' } },
-        { speciality: { $regex: search, $options: 'i' } },
-        { clinicName: { $regex: search, $options: 'i' } },
+      const pattern = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchOr = [
+        { name: { $regex: pattern, $options: 'i' } },
+        { city: { $regex: pattern, $options: 'i' } },
+        { area: { $regex: pattern, $options: 'i' } },
+        { speciality: { $regex: pattern, $options: 'i' } },
+        { clinicName: { $regex: pattern, $options: 'i' } },
       ];
+      // The sales person scope may already use $or (orphaned doctors); AND it with the search instead of overwriting it
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchOr }];
+        delete query.$or;
+      } else {
+        query.$or = searchOr;
+      }
     }
     if (category) query.category = category;
     if (status) query.status = status;

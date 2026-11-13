@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
   Stethoscope, Calendar, Clock, AlertTriangle, TrendingUp, Plus, ArrowRight,
@@ -15,6 +14,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import KpiCard from '@/components/ui/KpiCard';
 import Card, { CardTitle, CardDescription } from '@/components/ui/Card';
 import Badge, { statusVariant } from '@/components/ui/Badge';
+import CategoryDistribution from '@/components/dashboard/CategoryDistribution';
 
 interface KPI {
   totalDoctors: number;
@@ -45,10 +45,6 @@ interface DashboardData {
     salesPerson: { name: string };
   }>;
 }
-
-const CAT_COLORS: Record<string, string> = {
-  A: '#4F46E5', B: '#0EA5A4', C: '#F59E0B', D: '#9CA3AF',
-};
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -129,7 +125,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardTitle>Doctor Categories</CardTitle>
-          <CardDescription className="mb-4">Distribution by category</CardDescription>
+          <CardDescription className="mb-5">Distribution by category</CardDescription>
           {loading ? (
             <div className="skeleton h-[220px] rounded-xl" />
           ) : !data?.categoryDistribution?.length ? (
@@ -141,17 +137,7 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={data.categoryDistribution} dataKey="count" nameKey="_id" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3}>
-                  {data.categoryDistribution.map((entry, i) => (
-                    <Cell key={i} fill={CAT_COLORS[entry._id] || '#E5E7EB'} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v, n) => [`${v} doctors`, `Category ${n}`]} />
-                <Legend formatter={(v) => `Category ${v}`} iconType="circle" iconSize={8} />
-              </PieChart>
-            </ResponsiveContainer>
+            <CategoryDistribution data={data.categoryDistribution} />
           )}
         </Card>
       </div>

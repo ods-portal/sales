@@ -122,6 +122,7 @@ export default function NewVisitPage() {
   const [doctors, setDoctors] = useState<Array<{ _id: string; name: string; slug: string; speciality: string; city: string; area?: string }>>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<{ _id: string; name: string; slug: string; city?: string; area?: string } | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [doctorSearchStatus, setDoctorSearchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [submitting, setSubmitting] = useState(false);
   const [cityConflict, setCityConflict] = useState<{
     title: string;
@@ -178,19 +179,32 @@ export default function NewVisitPage() {
 
   // Doctor search
   useEffect(() => {
-    if (!doctorSearch || doctorSearch.length < 2) { 
-      const tm = setTimeout(() => setDoctors([]), 0);
-      return () => clearTimeout(tm); 
+    const query = doctorSearch.trim();
+    if (query.length < 2) {
+      const tm = setTimeout(() => { setDoctors([]); setDoctorSearchStatus('idle'); }, 0);
+      return () => clearTimeout(tm);
     }
     if (selectedDoctor && doctorSearch === selectedDoctor.name) return; // Prevent searching if it matches the selected doctor
 
+    // The API already limits sales persons to their own doctors; admins can log visits for any doctor
+    const controller = new AbortController();
     const t = setTimeout(async () => {
-      const r = await fetch(`/api/doctors?search=${doctorSearch}&limit=8&assignedRep=me`);
-      const d = await r.json();
-      setDoctors(d.data || []);
+      setDoctorSearchStatus('loading');
       setShowDropdown(true);
+      try {
+        const r = await fetch(`/api/doctors?search=${encodeURIComponent(query)}&limit=8`, { signal: controller.signal });
+        if (!r.ok) throw new Error(`Doctor search failed (${r.status})`);
+        const d = await r.json();
+        setDoctors(Array.isArray(d.data) ? d.data : []);
+        setDoctorSearchStatus('done');
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error(err);
+        setDoctors([]);
+        setDoctorSearchStatus('error');
+      }
     }, 300);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); controller.abort(); };
   }, [doctorSearch, selectedDoctor]);
 
   // Auto-save
@@ -320,6 +334,13 @@ export default function NewVisitPage() {
                 placeholder="Type doctor name..."
                 autoComplete="off"
               />
+              {showDropdown && doctorSearchStatus !== 'idle' && doctors.length === 0 && (
+                <div role="status" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid var(--border)', borderRadius: 10, boxShadow: 'var(--shadow-md)', zIndex: 20, marginTop: 4, padding: '12px 16px', fontSize: 13, color: 'var(--text-muted)' }}>
+                  {doctorSearchStatus === 'loading' && 'Searching doctors...'}
+                  {doctorSearchStatus === 'done' && 'No doctors found. Try a different name, city or speciality.'}
+                  {doctorSearchStatus === 'error' && 'Could not search doctors. Please try again.'}
+                </div>
+              )}
               {showDropdown && doctors.length > 0 && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid var(--border)', borderRadius: 10, boxShadow: 'var(--shadow-md)', zIndex: 20, marginTop: 4, overflow: 'hidden' }}>
                   {doctors.map((d) => (
