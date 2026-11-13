@@ -8,7 +8,8 @@ import SupportTicket from '@/models/SupportTicket';
 import Doctor from '@/models/Doctor';
 import User from '@/models/User';
 import AuditLog from '@/models/AuditLog';
-import { NextRequest } from 'next/server';
+import { NextRequest, after } from 'next/server';
+import { sendTicketCreatedEmail } from '@/lib/supportNotifications';
 import mongoose from 'mongoose';
 
 void User;
@@ -150,6 +151,9 @@ export async function POST(request: NextRequest) {
       entityLabel: `${ticket.ticketNo} · ${doctor.name}`,
       after: { ticketNo: ticket.ticketNo, patientId, reason, assignedTo: assignee.user?.name },
     });
+
+    const ticketId = ticket._id.toString();
+    after(() => sendTicketCreatedEmail(ticketId));
 
     return Response.json({ data: ticket }, { status: 201 });
   } catch (error) {

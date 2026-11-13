@@ -6,7 +6,8 @@ import { resolveAssignee, sanitizeUrls } from '@/lib/supportValidation';
 import SupportTicket from '@/models/SupportTicket';
 import Doctor from '@/models/Doctor';
 import AuditLog from '@/models/AuditLog';
-import { NextRequest } from 'next/server';
+import { NextRequest, after } from 'next/server';
+import { sendTicketStatusEmail } from '@/lib/supportNotifications';
 import { Types } from 'mongoose';
 
 void Doctor;
@@ -136,6 +137,12 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       before,
       after: { status: ticket.status, assignedTo: ticket.assignedToName, actionTaken: ticket.actionTaken },
     });
+
+    if (statusChanged) {
+      const ticketId = ticket._id.toString();
+      const previousStatus = before.status;
+      after(() => sendTicketStatusEmail(ticketId, previousStatus));
+    }
 
     const updated = await SupportTicket.findById(ticket._id)
       .populate('doctor', 'name slug city area speciality phone clinicName')
