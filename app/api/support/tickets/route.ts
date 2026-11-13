@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (assignee.error) return Response.json({ error: assignee.error }, { status: 400 });
 
     const now = new Date();
-    const ticket = await createWithTicketNo((ticketNo) =>
+    const ticket = await createWithTicketNo(doctor.name, (ticketNo) =>
       SupportTicket.create({
         ticketNo,
         doctor: doctor._id,

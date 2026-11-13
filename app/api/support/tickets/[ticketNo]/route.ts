@@ -14,6 +14,8 @@ void Doctor;
 
 type Ctx = { params: Promise<{ ticketNo: string }> };
 
+const SUPPORT_LOCKED_FIELDS = ['status', 'assignedTo', 'images', 'videos'] as const;
+
 export async function GET(_request: NextRequest, ctx: Ctx) {
   try {
     await connectDB();
@@ -44,6 +46,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== 'object') {
       return Response.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    if (user.role === 'support' && SUPPORT_LOCKED_FIELDS.some((field) => body[field] !== undefined)) {
+      return Response.json({ error: 'Support staff can only update the action taken and notes' }, { status: 403 });
     }
 
     const { ticketNo } = await ctx.params;

@@ -170,7 +170,14 @@ export default function SupportTicketDetailPage() {
 
         <div className="space-y-4">
           {canManage && (
-            <TicketUpdatePanel key={ticket.updatedAt} ticket={ticket} statuses={statuses} employees={employees} onUpdated={setTicket} />
+            <TicketUpdatePanel
+              key={ticket.updatedAt}
+              ticket={ticket}
+              statuses={statuses}
+              employees={employees}
+              isRestricted={currentUser?.role === 'support'}
+              onUpdated={setTicket}
+            />
           )}
           <Card>
             <CardTitle>Status History</CardTitle>

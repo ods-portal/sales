@@ -14,6 +14,8 @@ interface TicketUpdatePanelProps {
   ticket: SupportTicket;
   statuses: string[];
   employees: SupportEmployee[];
+  /** Support staff may only edit the action taken and add notes. */
+  isRestricted?: boolean;
   onUpdated: (ticket: SupportTicket) => void;
 }
 
@@ -39,25 +41,28 @@ const draftFrom = (t: SupportTicket): UpdateDraft => ({
 });
 
 /** Only send fields that differ from the saved ticket, so history entries reflect real changes. */
-function buildPatch(draft: UpdateDraft, ticket: SupportTicket) {
+function buildPatch(draft: UpdateDraft, ticket: SupportTicket, isRestricted: boolean) {
   const saved = draftFrom(ticket);
   const patch: Record<string, unknown> = {};
+  if (draft.actionTaken.trim() !== saved.actionTaken.trim()) patch.actionTaken = draft.actionTaken;
+  if (draft.note.trim()) patch.note = draft.note.trim();
+  if (isRestricted) return patch;
   if (draft.status !== saved.status) patch.status = draft.status;
   if (draft.assignedTo !== saved.assignedTo) patch.assignedTo = draft.assignedTo;
-  if (draft.actionTaken.trim() !== saved.actionTaken.trim()) patch.actionTaken = draft.actionTaken;
   if (!sameList(draft.images, saved.images)) patch.images = draft.images;
   if (!sameList(draft.videos, saved.videos)) patch.videos = draft.videos;
-  if (draft.note.trim()) patch.note = draft.note.trim();
   return patch;
 }
 
-export default function TicketUpdatePanel({ ticket, statuses, employees, onUpdated }: TicketUpdatePanelProps) {
+const LOCKED_HINT = 'Only an admin can change this';
+
+export default function TicketUpdatePanel({ ticket, statuses, employees, isRestricted = false, onUpdated }: TicketUpdatePanelProps) {
   const { addToast } = useToast();
   const confirm = useConfirm();
   const [draft, setDraft] = useState<UpdateDraft>(() => draftFrom(ticket));
   const [saving, setSaving] = useState(false);
 
-  const patch = useMemo(() => buildPatch(draft, ticket), [draft, ticket]);
+  const patch = useMemo(() => buildPatch(draft, ticket, isRestricted), [draft, ticket, isRestricted]);
   const isDirty = Object.keys(patch).length > 0;
   const statusOptions = statuses.includes(ticket.status) ? statuses : [ticket.status, ...statuses];
 
@@ -97,16 +102,18 @@ export default function TicketUpdatePanel({ ticket, statuses, employees, onUpdat
   return (
     <Card>
       <CardTitle>Update Ticket</CardTitle>
-      <CardDescription className="mb-4">Every status change is saved to the history</CardDescription>
+      <CardDescription className="mb-4">
+        {isRestricted ? 'You can update the action taken and add notes' : 'Every status change is saved to the history'}
+      </CardDescription>
       <form onSubmit={handleSave} className="space-y-4" noValidate>
-        <TicketField label="Support Status" htmlFor="update-status" hint="Choosing Closed records the closing date & time automatically">
-          <select id="update-status" className={FIELD_INPUT_CLASS} value={draft.status} onChange={(e) => set('status', e.target.value)}>
+        <TicketField label="Support Status" htmlFor="update-status" hint={isRestricted ? LOCKED_HINT : 'Choosing Closed records the closing date & time automatically'}>
+          <select id="update-status" className={`${FIELD_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-60`} value={draft.status} disabled={isRestricted} onChange={(e) => set('status', e.target.value)}>
             {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </TicketField>
 
-        <TicketField label="Support Assigned To" htmlFor="update-assignee" hint="Only active support team members are listed">
-          <select id="update-assignee" className={FIELD_INPUT_CLASS} value={draft.assignedTo} onChange={(e) => set('assignedTo', e.target.value)}>
+        <TicketField label="Support Assigned To" htmlFor="update-assignee" hint={isRestricted ? LOCKED_HINT : 'Only active support team members are listed'}>
+          <select id="update-assignee" className={`${FIELD_INPUT_CLASS} disabled:cursor-not-allowed disabled:opacity-60`} value={draft.assignedTo} disabled={isRestricted} onChange={(e) => set('assignedTo', e.target.value)}>
             <option value="">Unassigned</option>
             {ticket.assignedTo && !employees.some((emp) => emp._id === ticket.assignedTo) && (
               <option value={ticket.assignedTo}>{ticket.assignedToName ?? 'Previous assignee'} (inactive)</option>
@@ -123,8 +130,12 @@ export default function TicketUpdatePanel({ ticket, statuses, employees, onUpdat
           <textarea id="update-note" className={FIELD_TEXTAREA_CLASS} rows={2} placeholder="e.g. Called the doctor, replacement dispatched" value={draft.note} onChange={(e) => set('note', e.target.value)} />
         </TicketField>
 
-        <FileUploadWithProgress label="Image Attachments" id="update-images" accept="image/*" multiple existingValue={draft.images} onUploadComplete={(v) => set('images', toUrlList(v))} />
-        <FileUploadWithProgress label="Video Attachments" id="update-videos" accept="video/*" multiple existingValue={draft.videos} onUploadComplete={(v) => set('videos', toUrlList(v))} />
+        {!isRestricted && (
+          <>
+            <FileUploadWithProgress label="Image Attachments" id="update-images" accept="image/*" multiple existingValue={draft.images} onUploadComplete={(v) => set('images', toUrlList(v))} />
+            <FileUploadWithProgress label="Video Attachments" id="update-videos" accept="video/*" multiple existingValue={draft.videos} onUploadComplete={(v) => set('videos', toUrlList(v))} />
+          </>
+        )}
 
         <div className="flex flex-wrap justify-end gap-2 pt-1">
           <button type="button" className="btn btn-secondary" disabled={!isDirty || saving} onClick={() => setDraft(draftFrom(ticket))}>
