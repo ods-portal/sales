@@ -1,4 +1,5 @@
 import Dropdown from '@/models/Dropdown';
+import SupportTicket from '@/models/SupportTicket';
 import { createSlug } from '@/lib/utils';
 import type { JWTPayload } from '@/lib/auth';
 import { Types } from 'mongoose';
@@ -14,6 +15,10 @@ const TICKET_PREFIX_LENGTH = 3;
 const TICKET_FALLBACK_PREFIX = 'DOC';
 const TICKET_TIME_ZONE = 'Asia/Kolkata';
 const MAX_TICKET_NO_ATTEMPTS = 5;
+const CHAR_CODE_A = 65;
+const LAST_LETTER_INDEX = 25;
+const NUMBERS_PER_LETTER = 99;
+const SUFFIX_NUMBER_DIGITS = 2;
 
 async function seedGroup(group: string, labels: string[], systemLabels: string[] = []) {
   const count = await Dropdown.countDocuments({ group });
@@ -48,22 +53,32 @@ function doctorTicketPrefix(doctorName: string): string {
   return (withoutTitle || lettersOnly(doctorName)).slice(0, TICKET_PREFIX_LENGTH) || TICKET_FALLBACK_PREFIX;
 }
 
-/** Date and time down to milliseconds in IST, e.g. 20261113 + 164512345. */
-function ticketTimestamp(date: Date): string {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: TICKET_TIME_ZONE,
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(date).map((p) => [p.type, p.value])
-  );
-  const ms = String(date.getMilliseconds()).padStart(3, '0');
-  return `${parts.year}${parts.month}${parts.day}-${parts.hour}${parts.minute}${parts.second}${ms}`;
+function currentTicketYear(): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: TICKET_TIME_ZONE, year: 'numeric' }).format(new Date());
 }
 
-function nextTicketNo(doctorName: string, attempt: number): string {
-  return `${doctorTicketPrefix(doctorName)}-${ticketTimestamp(new Date(Date.now() + attempt))}`;
+/**
+ * Suffix sequence: A01 … A99, B01 … B99 … Z99. Index 0 = A01.
+ * Past Z99 the number keeps growing on Z (Z100, Z101 …) so codes never repeat.
+ */
+function suffixToIndex(suffix: string): number {
+  return (suffix.charCodeAt(0) - CHAR_CODE_A) * NUMBERS_PER_LETTER + parseInt(suffix.slice(1), 10) - 1;
+}
+
+function indexToSuffix(index: number): string {
+  const letterIndex = Math.min(Math.floor(index / NUMBERS_PER_LETTER), LAST_LETTER_INDEX);
+  const number = index - letterIndex * NUMBERS_PER_LETTER + 1;
+  return `${String.fromCharCode(CHAR_CODE_A + letterIndex)}${String(number).padStart(SUFFIX_NUMBER_DIGITS, '0')}`;
+}
+
+/** e.g. "Dr. Support Test" in 2026 → SUP2026-A01, then SUP2026-A02 … */
+async function nextTicketNo(doctorName: string): Promise<string> {
+  const base = `${doctorTicketPrefix(doctorName)}${currentTicketYear()}-`;
+  const existing = await SupportTicket.find({ ticketNo: { $regex: `^${base}[A-Z]\\d{2,}$` } })
+    .select('ticketNo')
+    .lean();
+  const lastIndex = existing.reduce((max, t) => Math.max(max, suffixToIndex(t.ticketNo.slice(base.length))), -1);
+  return `${base}${indexToSuffix(lastIndex + 1)}`;
 }
 
 function isDuplicateKeyError(error: unknown): boolean {
@@ -75,7 +90,7 @@ export async function createWithTicketNo<T>(doctorName: string, create: (ticketN
   let lastError: unknown;
   for (let attempt = 0; attempt < MAX_TICKET_NO_ATTEMPTS; attempt++) {
     try {
-      return await create(nextTicketNo(doctorName, attempt));
+      return await create(await nextTicketNo(doctorName));
     } catch (error) {
       if (!isDuplicateKeyError(error)) throw error;
       lastError = error;
