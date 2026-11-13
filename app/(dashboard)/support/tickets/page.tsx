@@ -21,7 +21,7 @@ interface PaginationMeta {
   totalPages: number;
 }
 
-const SELECT_CLASS = 'input !py-2.5 text-sm';
+const SELECT_CLASS = 'input !py-2 text-[13px]';
 
 export default function SupportTicketsPage() {
   const router = useRouter();
@@ -112,22 +112,22 @@ export default function SupportTicketsPage() {
         }
       />
 
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm md:p-5">
-        <div className="relative mb-4">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm md:p-4">
+        <div className="relative mb-3">
           <svg className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
           </svg>
           <input
             type="search"
             aria-label="Search tickets"
-            className="w-full rounded-full border border-slate-200 bg-slate-50/50 py-3 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10"
+            className="w-full rounded-full border border-slate-200 bg-slate-50/50 py-2.5 pl-11 pr-4 text-[13px] text-slate-900 placeholder:text-slate-400 transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10"
             placeholder="Search ticket no., patient ID or doctor..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
 
-        <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+        <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
           {['', ...statuses].map((s) => (
             <button
               key={s || 'all'}
@@ -135,7 +135,7 @@ export default function SupportTicketsPage() {
               onClick={() => setFilter('status', s)}
               aria-pressed={status === s}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150',
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] md:py-1.5 font-medium transition-all duration-150',
                 status === s
                   ? 'bg-brand-light text-brand shadow-sm ring-2 ring-brand/20'
                   : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'
@@ -164,7 +164,7 @@ export default function SupportTicketsPage() {
               </select>
             </div>
           )}
-          <button type="button" className="btn btn-secondary" onClick={handleClearFilters} disabled={!hasFilters}>
+          <button type="button" className="btn btn-secondary !py-2 text-[13px]" onClick={handleClearFilters} disabled={!hasFilters}>
             Clear filters
           </button>
         </div>
