@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { getAuthUser, canAccessSupport } from '@/lib/auth';
 import { SUPPORT_CLOSED_STATUS, SUPPORT_OPEN_STATUS } from '@/lib/supportConstants';
+import { supportTicketScope } from '@/lib/support';
 import SupportTicket from '@/models/SupportTicket';
 import Doctor from '@/models/Doctor';
 import { Types } from 'mongoose';
@@ -26,6 +27,8 @@ export async function GET() {
     const monthStart = startOfMonth(now);
     const trendStart = startOfDay(subDays(now, TREND_DAYS - 1));
     const notClosed = { status: { $ne: SUPPORT_CLOSED_STATUS } };
+    const scope = supportTicketScope(user);
+    const scoped = (filter: Record<string, unknown> = {}) => ({ ...scope, ...filter });
 
     const [
       totalTickets,
@@ -40,19 +43,19 @@ export async function GET() {
       recentTickets,
       myQueue,
     ] = await Promise.all([
-      SupportTicket.countDocuments({}),
-      SupportTicket.countDocuments(notClosed),
-      SupportTicket.countDocuments({ createdAt: { $gte: todayStart } }),
-      SupportTicket.countDocuments({ status: SUPPORT_CLOSED_STATUS, closedAt: { $gte: monthStart } }),
+      SupportTicket.countDocuments(scoped()),
+      SupportTicket.countDocuments(scoped(notClosed)),
+      SupportTicket.countDocuments(scoped({ createdAt: { $gte: todayStart } })),
+      SupportTicket.countDocuments(scoped({ status: SUPPORT_CLOSED_STATUS, closedAt: { $gte: monthStart } })),
       SupportTicket.countDocuments({ ...notClosed, assignedTo: new Types.ObjectId(user.userId) }),
-      SupportTicket.countDocuments({ ...notClosed, assignedTo: { $exists: false } }),
-      SupportTicket.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
-      SupportTicket.aggregate([{ $group: { _id: '$reason', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+      SupportTicket.countDocuments(scoped({ ...notClosed, assignedTo: { $exists: false } })),
+      SupportTicket.aggregate([{ $match: scoped() }, { $group: { _id: '$status', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+      SupportTicket.aggregate([{ $match: scoped() }, { $group: { _id: '$reason', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
       SupportTicket.aggregate([
-        { $match: { createdAt: { $gte: trendStart } } },
+        { $match: scoped({ createdAt: { $gte: trendStart } }) },
         { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: REPORT_TIMEZONE } }, count: { $sum: 1 } } },
       ]),
-      SupportTicket.find({})
+      SupportTicket.find(scoped())
         .select('ticketNo patientId reason status assignedToName createdAt doctor')
         .populate('doctor', 'name slug')
         .sort({ createdAt: -1 })

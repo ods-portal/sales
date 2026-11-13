@@ -1,6 +1,8 @@
 import Dropdown from '@/models/Dropdown';
 import SupportTicket from '@/models/SupportTicket';
 import { createSlug } from '@/lib/utils';
+import type { JWTPayload } from '@/lib/auth';
+import { Types } from 'mongoose';
 import {
   SUPPORT_REASON_GROUP,
   SUPPORT_STATUS_GROUP,
@@ -69,4 +71,11 @@ export async function createWithTicketNo<T>(create: (ticketNo: string) => Promis
 
 export function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Support users only see tickets assigned to them or raised by them; admins see everything. */
+export function supportTicketScope(user: JWTPayload): Record<string, unknown> {
+  if (user.role !== 'support') return {};
+  const userId = new Types.ObjectId(user.userId);
+  return { $or: [{ assignedTo: userId }, { createdBy: userId }] };
 }

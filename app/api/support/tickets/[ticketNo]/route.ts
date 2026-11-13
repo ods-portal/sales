@@ -1,6 +1,6 @@
 import { connectDB } from '@/lib/db';
 import { getAuthUser, canAccessSupport, canManageSupportTickets } from '@/lib/auth';
-import { getActiveDropdownLabels } from '@/lib/support';
+import { getActiveDropdownLabels, supportTicketScope } from '@/lib/support';
 import { SUPPORT_STATUS_GROUP, SUPPORT_CLOSED_STATUS } from '@/lib/supportConstants';
 import { resolveAssignee, sanitizeUrls } from '@/lib/supportValidation';
 import SupportTicket from '@/models/SupportTicket';
@@ -22,7 +22,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     if (!canAccessSupport(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const { ticketNo } = await ctx.params;
-    const ticket = await SupportTicket.findOne({ ticketNo })
+    const ticket = await SupportTicket.findOne({ ticketNo, ...supportTicketScope(user) })
       .populate('doctor', 'name slug city area speciality phone clinicName')
       .lean();
     if (!ticket) return Response.json({ error: 'Ticket not found' }, { status: 404 });
@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     }
 
     const { ticketNo } = await ctx.params;
-    const ticket = await SupportTicket.findOne({ ticketNo });
+    const ticket = await SupportTicket.findOne({ ticketNo, ...supportTicketScope(user) });
     if (!ticket) return Response.json({ error: 'Ticket not found' }, { status: 404 });
 
     const before = {

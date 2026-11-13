@@ -95,7 +95,7 @@ export default function SupportTicketsPage() {
 
   const isSupport = currentUser?.role === 'support';
   const hasFilters = Boolean(search || status || reason || assignedTo);
-  const title = assignedTo === 'me' ? 'My Tickets' : 'Support Tickets';
+  const title = isSupport || assignedTo === 'me' ? 'My Tickets' : 'Support Tickets';
 
   return (
     <PageShell>
@@ -146,7 +146,7 @@ export default function SupportTicketsPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div className={cn('grid grid-cols-1 gap-3 sm:items-end', isSupport ? 'sm:grid-cols-[1fr_auto]' : 'sm:grid-cols-[1fr_1fr_auto]')}>
           <div>
             <label className="input-label" htmlFor="ticket-reason-filter">Reason</label>
             <select id="ticket-reason-filter" className={SELECT_CLASS} value={reason} onChange={(e) => setFilter('reason', e.target.value)}>
@@ -154,15 +154,16 @@ export default function SupportTicketsPage() {
               {reasons.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
-          <div>
-            <label className="input-label" htmlFor="ticket-assignee-filter">Assigned To</label>
-            <select id="ticket-assignee-filter" className={SELECT_CLASS} value={assignedTo} onChange={(e) => setFilter('assignedTo', e.target.value)}>
-              <option value="">Everyone</option>
-              {isSupport && <option value="me">Assigned to me</option>}
-              <option value="unassigned">Unassigned</option>
-              {employees.map((e) => <option key={e._id} value={e._id}>{e.name}</option>)}
-            </select>
-          </div>
+          {!isSupport && (
+            <div>
+              <label className="input-label" htmlFor="ticket-assignee-filter">Assigned To</label>
+              <select id="ticket-assignee-filter" className={SELECT_CLASS} value={assignedTo} onChange={(e) => setFilter('assignedTo', e.target.value)}>
+                <option value="">Everyone</option>
+                <option value="unassigned">Unassigned</option>
+                {employees.map((e) => <option key={e._id} value={e._id}>{e.name}</option>)}
+              </select>
+            </div>
+          )}
           <button type="button" className="btn btn-secondary" onClick={handleClearFilters} disabled={!hasFilters}>
             Clear filters
           </button>
@@ -175,7 +176,7 @@ export default function SupportTicketsPage() {
 
       <div className="rounded-2xl max-md:bg-transparent md:overflow-hidden md:border md:border-slate-200/80 md:bg-white md:shadow-sm">
         <div className="md:overflow-x-auto">
-          <TicketsTable tickets={tickets} loading={loading} hasFilters={hasFilters} />
+          <TicketsTable tickets={tickets} loading={loading} hasFilters={hasFilters} showCreatedBy={!isSupport} />
         </div>
         <TicketsPagination
           page={page}

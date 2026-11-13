@@ -1,7 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { getAuthUser, canAccessSupport, canManageSupportTickets } from '@/lib/auth';
 import { paginationMeta } from '@/lib/utils';
-import { createWithTicketNo, escapeRegex, getActiveDropdownLabels } from '@/lib/support';
+import { createWithTicketNo, escapeRegex, getActiveDropdownLabels, supportTicketScope } from '@/lib/support';
 import { SUPPORT_REASON_GROUP, SUPPORT_OPEN_STATUS } from '@/lib/supportConstants';
 import { resolveAssignee, sanitizeUrls } from '@/lib/supportValidation';
 import SupportTicket from '@/models/SupportTicket';
@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
     const sortParam = searchParams.get('sort') || '-createdAt';
 
     const query: Record<string, unknown> = {};
+    const conditions: Record<string, unknown>[] = [];
+    const scope = supportTicketScope(user);
+    if (Object.keys(scope).length) conditions.push(scope);
     if (status) query.status = status;
     if (reason) query.reason = reason;
     if (assignedTo === 'me') query.assignedTo = user.userId;
@@ -45,12 +48,15 @@ export async function GET(request: NextRequest) {
     if (search) {
       const pattern = escapeRegex(search);
       const doctorIds = await Doctor.find({ name: { $regex: pattern, $options: 'i' } }).distinct('_id');
-      query.$or = [
-        { ticketNo: { $regex: pattern, $options: 'i' } },
-        { patientId: { $regex: pattern, $options: 'i' } },
-        { doctor: { $in: doctorIds } },
-      ];
+      conditions.push({
+        $or: [
+          { ticketNo: { $regex: pattern, $options: 'i' } },
+          { patientId: { $regex: pattern, $options: 'i' } },
+          { doctor: { $in: doctorIds } },
+        ],
+      });
     }
+    if (conditions.length) query.$and = conditions;
 
     const sortField = sortParam.replace(/^-/, '');
     const sort: Record<string, 1 | -1> = SORTABLE_FIELDS.has(sortField)
@@ -108,7 +114,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Please select a reason from the list' }, { status: 400 });
     }
 
-    const assignee = await resolveAssignee(body.assignedTo);
+    // Support staff always own the tickets they raise; only admins choose the assignee
+    const assignee = await resolveAssignee(user.role === 'support' ? user.userId : body.assignedTo);
     if (assignee.error) return Response.json({ error: assignee.error }, { status: 400 });
 
     const now = new Date();

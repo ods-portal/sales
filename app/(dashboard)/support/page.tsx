@@ -95,7 +95,7 @@ export default function SupportDashboardPage() {
     <PageShell>
       <PageHeader
         title="Support Overview"
-        subtitle="Doctor support tickets at a glance"
+        subtitle={isSupport ? 'Your support tickets at a glance' : 'All doctor support tickets at a glance'}
         icon={<LifeBuoy className="h-5 w-5" />}
         actions={
           canManageSupportTickets(currentUser) ? (
@@ -113,12 +113,13 @@ export default function SupportDashboardPage() {
       <div className="grid grid-cols-2 gap-3 max-md:[&>*:last-child:nth-child(odd)]:col-span-2 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] md:gap-4">
         <KpiCard label="Open Tickets" value={kpis?.openTickets ?? 0} hint="Not yet closed" accent="indigo" icon={<Inbox className="h-5 w-5" />} loading={loading} />
         <KpiCard label="Created Today" value={kpis?.createdToday ?? 0} hint="New requests today" accent="sky" icon={<CalendarPlus className="h-5 w-5" />} loading={loading} />
-        {isSupport ? (
+        {isSupport && (
           <KpiCard label="Assigned To Me" value={kpis?.myOpenTickets ?? 0} hint="Open in my queue" accent="violet" icon={<UserCheck className="h-5 w-5" />} loading={loading} />
-        ) : (
-          <KpiCard label="Total Tickets" value={kpis?.totalTickets ?? 0} hint="All time" accent="violet" icon={<LifeBuoy className="h-5 w-5" />} loading={loading} />
         )}
-        <KpiCard label="Unassigned" value={kpis?.unassigned ?? 0} hint="Needs an owner" accent="amber" icon={<UserX className="h-5 w-5" />} loading={loading} />
+        <KpiCard label={isSupport ? 'My Tickets' : 'Total Tickets'} value={kpis?.totalTickets ?? 0} hint="All time" accent="amber" icon={<LifeBuoy className="h-5 w-5" />} loading={loading} />
+        {!isSupport && (
+          <KpiCard label="Unassigned" value={kpis?.unassigned ?? 0} hint="Needs an owner" accent="rose" icon={<UserX className="h-5 w-5" />} loading={loading} />
+        )}
         <KpiCard label="Closed This Month" value={kpis?.closedThisMonth ?? 0} hint="Current month" accent="emerald" icon={<CheckCircle2 className="h-5 w-5" />} loading={loading} />
       </div>
 
@@ -157,7 +158,7 @@ export default function SupportDashboardPage() {
       <div className={`grid grid-cols-1 gap-4 ${isSupport ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <CardTitle>Recent Tickets</CardTitle>
+            <CardTitle>{isSupport ? 'My Recent Tickets' : 'Recent Tickets'}</CardTitle>
             <SectionLink href="/support/tickets" />
           </div>
           {loading ? <ListSkeleton /> : !data?.recentTickets?.length ? (
@@ -173,7 +174,7 @@ export default function SupportDashboardPage() {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <CardTitle>My Queue</CardTitle>
-              <SectionLink href="/support/tickets?assignedTo=me" />
+              <SectionLink href="/support/tickets" />
             </div>
             {loading ? <ListSkeleton /> : !data?.myQueue?.length ? (
               <EmptyState icon="🎉" title="All caught up!" hint="No open tickets assigned to you" />

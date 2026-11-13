@@ -80,8 +80,8 @@ const NAV: NavSection[] = [
     items: [
       { label: 'Support Overview', href: '/support', icon: LifeBuoy },
       { label: 'New Ticket', href: '/support/tickets/new', icon: TicketPlus, requireTicketAccess: true },
-      { label: 'All Tickets', href: '/support/tickets', icon: Ticket },
-      { label: 'My Tickets', href: '/support/tickets?assignedTo=me', icon: Inbox, roles: ['support'] },
+      { label: 'All Tickets', href: '/support/tickets', icon: Ticket, roles: ['admin', 'superAdmin'] },
+      { label: 'My Tickets', href: '/support/tickets', icon: Inbox, roles: ['support'] },
     ],
   },
   {

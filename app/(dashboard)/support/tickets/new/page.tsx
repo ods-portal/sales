@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, LifeBuoy, Save } from 'lucide-react';
+import { ChevronLeft, LifeBuoy, Lock, Save } from 'lucide-react';
 import { cn, formatDateTime } from '@/lib/utils';
 import { SUPPORT_OPEN_STATUS } from '@/lib/supportConstants';
 import { useToast } from '@/components/ui/ToastProvider';
@@ -48,14 +48,8 @@ export default function NewSupportTicketPage() {
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((d) => {
-        if (!d.user) return;
-        setCurrentUser(d.user);
-        if (d.user.role === 'support') setField('assignedTo', d.user.userId);
-      })
+      .then((d) => { if (d.user) setCurrentUser(d.user); })
       .catch(() => setCurrentUser(null));
-    // setField identity changes with touched state; the default assignee only needs to be set once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -71,6 +65,8 @@ export default function NewSupportTicketPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doctorSlug]);
 
+  const isSupport = currentUser?.role === 'support';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateAll()) {
@@ -82,7 +78,7 @@ export default function NewSupportTicketPage() {
       const res = await fetch('/api/support/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, doctor: form.doctor?._id }),
+        body: JSON.stringify({ ...form, doctor: form.doctor?._id, assignedTo: isSupport ? undefined : form.assignedTo }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create ticket');
@@ -196,18 +192,28 @@ export default function NewSupportTicketPage() {
           <Card>
             <CardTitle>Assignment</CardTitle>
             <CardDescription className="mb-4">Who will handle this ticket</CardDescription>
-            <TicketField label="Support Assigned To" htmlFor="assignedTo" hint={employees.length ? 'Only active support team members are listed' : 'No support users yet — create one from Manage Users'}>
-              <select
-                id="assignedTo"
-                className={FIELD_INPUT_CLASS}
-                value={form.assignedTo}
-                disabled={optionsLoading}
-                onChange={(e) => setField('assignedTo', e.target.value)}
-              >
-                <option value="">Unassigned</option>
-                {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
-              </select>
-            </TicketField>
+            {isSupport ? (
+              <TicketField label="Support Assigned To" htmlFor="assignedTo" hint="Tickets you raise are assigned to you. An admin can reassign them later.">
+                <div id="assignedTo" className={cn(FIELD_INPUT_CLASS, 'flex items-center gap-2 bg-slate-50 text-slate-700')} aria-readonly="true">
+                  <Lock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                  <span className="truncate font-medium">{currentUser?.name}</span>
+                  <span className="ml-auto shrink-0 rounded-full bg-brand-light px-2 py-0.5 text-[11px] font-semibold text-brand">You</span>
+                </div>
+              </TicketField>
+            ) : (
+              <TicketField label="Support Assigned To" htmlFor="assignedTo" hint={employees.length ? 'Only active support team members are listed' : 'No support users yet — create one from Manage Users'}>
+                <select
+                  id="assignedTo"
+                  className={FIELD_INPUT_CLASS}
+                  value={form.assignedTo}
+                  disabled={optionsLoading}
+                  onChange={(e) => setField('assignedTo', e.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
+                </select>
+              </TicketField>
+            )}
           </Card>
 
           <Card>

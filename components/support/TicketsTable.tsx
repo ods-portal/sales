@@ -4,21 +4,25 @@ import { formatDateTime } from '@/lib/utils';
 import SupportStatusBadge from './SupportStatusBadge';
 import type { SupportTicket } from './types';
 
-const COLUMNS = ['Ticket No.', 'Doctor', 'Patient ID', 'Reason', 'Assigned To', 'Status', 'Created', 'Actions'];
+const BASE_COLUMNS = ['Ticket No.', 'Doctor', 'Patient ID', 'Reason', 'Assigned To', 'Status', 'Created', 'Actions'];
+const ADMIN_COLUMNS = ['Ticket No.', 'Doctor', 'Patient ID', 'Reason', 'Assigned To', 'Created By', 'Status', 'Created', 'Actions'];
 const SKELETON_ROWS = 8;
 
 interface TicketsTableProps {
   tickets: SupportTicket[];
   loading: boolean;
   hasFilters: boolean;
+  /** Admins review everyone's tickets, so they also see who raised each one. */
+  showCreatedBy?: boolean;
 }
 
-export default function TicketsTable({ tickets, loading, hasFilters }: TicketsTableProps) {
+export default function TicketsTable({ tickets, loading, hasFilters, showCreatedBy = false }: TicketsTableProps) {
+  const columns = showCreatedBy ? ADMIN_COLUMNS : BASE_COLUMNS;
   return (
-    <table className="responsive-table w-full min-w-[960px] border-collapse text-sm">
+    <table className={`responsive-table w-full border-collapse text-sm ${showCreatedBy ? 'min-w-[1080px]' : 'min-w-[960px]'}`}>
       <thead>
         <tr className="border-b border-slate-100 bg-slate-50/80">
-          {COLUMNS.map((c) => (
+          {columns.map((c) => (
             <th key={c} className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">{c}</th>
           ))}
         </tr>
@@ -27,14 +31,14 @@ export default function TicketsTable({ tickets, loading, hasFilters }: TicketsTa
         {loading ? (
           Array.from({ length: SKELETON_ROWS }).map((_, i) => (
             <tr key={i}>
-              {COLUMNS.map((c) => (
+              {columns.map((c) => (
                 <td key={c} className="px-5 py-4"><div className="h-4 animate-pulse rounded-md bg-slate-100" /></td>
               ))}
             </tr>
           ))
         ) : tickets.length === 0 ? (
           <tr>
-            <td colSpan={COLUMNS.length} className="px-5 py-20 text-center">
+            <td colSpan={columns.length} className="px-5 py-20 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-3xl">🎫</div>
               <p className="text-base font-semibold text-slate-900">No tickets found</p>
               <p className="mt-1 text-sm text-slate-500">
@@ -58,6 +62,7 @@ export default function TicketsTable({ tickets, loading, hasFilters }: TicketsTa
             <td data-label="Patient ID" className="px-5 py-4 text-slate-600">{t.patientId}</td>
             <td data-label="Reason" className="px-5 py-4 text-slate-600">{t.reason}</td>
             <td data-label="Assigned To" className="px-5 py-4 text-slate-600">{t.assignedToName || <span className="text-slate-400">Unassigned</span>}</td>
+            {showCreatedBy && <td data-label="Created By" className="px-5 py-4 text-slate-600">{t.createdByName}</td>}
             <td data-label="Status" className="px-5 py-4"><SupportStatusBadge status={t.status} /></td>
             <td data-label="Created" className="whitespace-nowrap px-5 py-4 text-slate-600">{formatDateTime(t.createdAt)}</td>
             <td className="cell-actions px-5 py-4">
