@@ -32,11 +32,13 @@ const ROLE_BADGE: Record<string, string> = {
   superAdmin: 'badge badge-indigo',
   admin: 'badge badge-blue',
   salesPerson: 'badge badge-gray',
+  support: 'badge badge-amber',
 };
 const ROLE_LABEL: Record<string, string> = {
   superAdmin: 'Super Admin',
   admin: 'Admin',
   salesPerson: 'Sales Person',
+  support: 'Support',
 };
 
 export default function UsersPage() {
@@ -416,6 +418,7 @@ export default function UsersPage() {
                 <select className="input" value={newUser.role} onChange={(e) => setNewUser((p) => ({ ...p, role: e.target.value }))}>
                   <option value="salesPerson">Sales Person</option>
                   <option value="admin">Admin</option>
+                  <option value="support">Support</option>
                   {currentUser?.role === 'superAdmin' && <option value="superAdmin">Super Admin</option>}
                 </select>
               </div>

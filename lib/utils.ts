@@ -88,6 +88,16 @@ export function canCreateRecords(user?: PermissionUser | null): boolean {
   return user.role === 'salesPerson' || hasWriteAccess(user);
 }
 
+export function canAccessSupport(user?: PermissionUser | null): boolean {
+  if (!user) return false;
+  return user.role === 'support' || user.role === 'admin' || user.role === 'superAdmin';
+}
+
+export function canManageSupportTickets(user?: PermissionUser | null): boolean {
+  if (!user) return false;
+  return user.role === 'support' || hasWriteAccess(user);
+}
+
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
 }

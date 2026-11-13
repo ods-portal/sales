@@ -3,11 +3,11 @@
 import { memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Stethoscope, Calendar, Bell, Plus, Menu } from 'lucide-react';
-import { cn, canCreateRecords } from '@/lib/utils';
+import { LayoutDashboard, Stethoscope, Calendar, Bell, Plus, Menu, Ticket } from 'lucide-react';
+import { cn, canCreateRecords, canManageSupportTickets } from '@/lib/utils';
 
 interface MobileBottomNavProps {
-  user: { role: 'salesPerson' | 'admin' | 'superAdmin'; hasWriteAccess: boolean };
+  user: { role: 'salesPerson' | 'admin' | 'superAdmin' | 'support'; hasWriteAccess: boolean };
   onMoreOpen: () => void;
 }
 
@@ -48,6 +48,20 @@ const ALERTS_TAB: Tab = {
   matches: (p) => p.startsWith('/alerts'),
 };
 
+const SUPPORT_HOME_TAB: Tab = {
+  label: 'Home',
+  href: '/support',
+  icon: LayoutDashboard,
+  matches: (p) => p === '/support',
+};
+
+const TICKETS_TAB: Tab = {
+  label: 'Tickets',
+  href: '/support/tickets',
+  icon: Ticket,
+  matches: (p) => p.startsWith('/support/tickets') && p !== '/support/tickets/new',
+};
+
 const tabClass =
   'flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-medium transition-colors duration-200 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand active:scale-95';
 
@@ -75,8 +89,10 @@ function TabLink({ tab, pathname }: { tab: Tab; pathname: string }) {
 
 function MobileBottomNav({ user, onMoreOpen }: MobileBottomNavProps) {
   const pathname = usePathname();
-  const canCreate = canCreateRecords(user);
-  const isLogVisitActive = pathname === '/visits/new';
+  const isSupport = user.role === 'support';
+  const canCreate = isSupport ? canManageSupportTickets(user) : canCreateRecords(user);
+  const createHref = isSupport ? '/support/tickets/new' : '/visits/new';
+  const isLogVisitActive = pathname === createHref;
 
   return (
     <nav
@@ -84,17 +100,17 @@ function MobileBottomNav({ user, onMoreOpen }: MobileBottomNavProps) {
       aria-label="Primary"
     >
       <div className="mx-auto flex max-w-md items-stretch gap-1 px-2 pt-0.5">
-        <TabLink tab={HOME_TAB} pathname={pathname} />
-        <TabLink tab={DOCTORS_TAB} pathname={pathname} />
+        <TabLink tab={isSupport ? SUPPORT_HOME_TAB : HOME_TAB} pathname={pathname} />
+        <TabLink tab={isSupport ? TICKETS_TAB : DOCTORS_TAB} pathname={pathname} />
         {canCreate ? (
           <div className="flex flex-1 items-start justify-center">
             <Link
-              href="/visits/new"
+              href={createHref}
               className={cn(
                 '-mt-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-violet-600 text-white shadow-lg shadow-indigo-500/40 ring-4 ring-white transition-transform duration-200 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-95',
                 isLogVisitActive && 'from-indigo-700 to-violet-700'
               )}
-              aria-label="Log new visit"
+              aria-label={isSupport ? 'Create support ticket' : 'Log new visit'}
               aria-current={isLogVisitActive ? 'page' : undefined}
             >
               <Plus className="h-5 w-5" strokeWidth={2.5} />
@@ -103,7 +119,7 @@ function MobileBottomNav({ user, onMoreOpen }: MobileBottomNavProps) {
         ) : (
           <TabLink tab={ALERTS_TAB} pathname={pathname} />
         )}
-        <TabLink tab={VISITS_TAB} pathname={pathname} />
+        <TabLink tab={isSupport ? DOCTORS_TAB : VISITS_TAB} pathname={pathname} />
         <button
           type="button"
           onClick={onMoreOpen}

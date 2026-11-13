@@ -24,13 +24,17 @@ import {
   Activity,
   Timer,
   ArrowRightLeft,
+  LifeBuoy,
+  Ticket,
+  TicketPlus,
+  Inbox,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, canCreateRecords, canManageSupportTickets } from '@/lib/utils';
 
 interface SidebarProps {
   user: {
     name: string;
-    role: 'salesPerson' | 'admin' | 'superAdmin';
+    role: AppRole;
     hasWriteAccess: boolean;
     slug: string;
   };
@@ -42,26 +46,42 @@ interface SidebarProps {
 
 type NavIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
+type AppRole = 'salesPerson' | 'admin' | 'superAdmin' | 'support';
+
+const SALES_ROLES: AppRole[] = ['salesPerson', 'admin', 'superAdmin'];
+
 interface NavItem {
   label: string;
   href: string;
   icon: NavIcon;
-  roles?: Array<'salesPerson' | 'admin' | 'superAdmin'>;
+  roles?: AppRole[];
   requireWrite?: boolean;
+  requireTicketAccess?: boolean;
 }
 
 interface NavSection {
   title: string;
   items: NavItem[];
-  roles?: Array<'salesPerson' | 'admin' | 'superAdmin'>;
+  roles?: AppRole[];
 }
 
 const NAV: NavSection[] = [
   {
     title: 'Dashboard',
+    roles: SALES_ROLES,
     items: [
       { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'superAdmin'], requireWrite: true },
+    ],
+  },
+  {
+    title: 'Support Desk',
+    roles: ['support', 'admin', 'superAdmin'],
+    items: [
+      { label: 'Support Overview', href: '/support', icon: LifeBuoy },
+      { label: 'New Ticket', href: '/support/tickets/new', icon: TicketPlus, requireTicketAccess: true },
+      { label: 'All Tickets', href: '/support/tickets', icon: Ticket },
+      { label: 'My Tickets', href: '/support/tickets?assignedTo=me', icon: Inbox, roles: ['support'] },
     ],
   },
   {
@@ -73,6 +93,7 @@ const NAV: NavSection[] = [
   },
   {
     title: 'Visit Management',
+    roles: SALES_ROLES,
     items: [
       { label: 'Log New Visit', href: '/visits/new', icon: PenLine, requireWrite: true },
       { label: 'All Visits', href: '/visits', icon: Calendar },
@@ -81,6 +102,7 @@ const NAV: NavSection[] = [
   },
   {
     title: 'Alerts & Compliance',
+    roles: SALES_ROLES,
     items: [
       { label: 'Overdue Follow-ups', href: '/alerts', icon: Bell },
     ],
@@ -112,6 +134,7 @@ const roleLabel: Record<string, string> = {
   superAdmin: 'Super Admin',
   admin: 'Admin',
   salesPerson: 'Sales Person',
+  support: 'Support',
 };
 
 export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMobileClose }: SidebarProps) {
@@ -119,7 +142,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
   const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedSections, setExpandedSections] = useState<string[]>([
-    'Dashboard'
+    user.role === 'support' ? 'Support Desk' : 'Dashboard'
   ]);
 
   const toggleSection = (title: string) => {
@@ -139,11 +162,12 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
       return pathname === basePath && matches;
     }
     if (pathname === basePath) {
-      if (!queryString && searchParams.has('status')) return false;
+      if (!queryString && (searchParams.has('status') || searchParams.has('assignedTo'))) return false;
       return true;
     }
     if (basePath === '/doctors' && pathname.startsWith('/doctors/') && !pathname.startsWith('/doctors/new')) return true;
     if (basePath === '/visits' && pathname.startsWith('/visits/') && !pathname.startsWith('/visits/new')) return true;
+    if (basePath === '/support/tickets' && pathname.startsWith('/support/tickets/') && !pathname.startsWith('/support/tickets/new')) return true;
     return false;
   };
 
@@ -154,7 +178,8 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
 
   const canSeeItem = (item: NavItem) => {
     if (item.roles && !item.roles.includes(user.role)) return false;
-    if (item.requireWrite && user.role === 'admin' && !user.hasWriteAccess) return false;
+    if (item.requireWrite && !canCreateRecords(user)) return false;
+    if (item.requireTicketAccess && !canManageSupportTickets(user)) return false;
     return true;
   };
 
@@ -187,7 +212,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
           )}
         >
           <Link
-            href="/dashboard"
+            href={user.role === 'support' ? '/support' : '/dashboard'}
             className="flex min-w-0 items-center gap-3 overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
             aria-label="DSR CMS home"
           >
@@ -197,7 +222,7 @@ export default function Sidebar({ user, collapsed, onCollapse, mobileOpen, onMob
             {!collapsed && (
               <div className="min-w-0">
                 <div className="truncate text-[15px] font-semibold tracking-tight text-white">DSR CMS</div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">Sales Portal</div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400">{user.role === 'support' ? 'Support Portal' : 'Sales Portal'}</div>
               </div>
             )}
           </Link>

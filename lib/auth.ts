@@ -10,7 +10,7 @@ const secret = new TextEncoder().encode(
 export interface JWTPayload {
   userId: string;
   email: string;
-  role: 'salesPerson' | 'admin' | 'superAdmin';
+  role: 'salesPerson' | 'admin' | 'superAdmin' | 'support';
   hasWriteAccess: boolean;
   name: string;
   slug: string;
@@ -69,6 +69,16 @@ export function canWrite(user: JWTPayload): boolean {
 
 export function canCreateRecords(user: JWTPayload): boolean {
   return user.role === 'salesPerson' || canWrite(user);
+}
+
+/** Support desk is used by support staff and viewable by admins. */
+export function canAccessSupport(user: JWTPayload): boolean {
+  return user.role === 'support' || isAdmin(user);
+}
+
+/** Support staff and admins with write access can create and update tickets. */
+export function canManageSupportTickets(user: JWTPayload): boolean {
+  return user.role === 'support' || canWrite(user);
 }
 
 export function isSuperAdmin(user: JWTPayload): boolean {

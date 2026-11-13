@@ -12,7 +12,7 @@ interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: {
     name: string;
-    role: 'salesPerson' | 'admin' | 'superAdmin';
+    role: 'salesPerson' | 'admin' | 'superAdmin' | 'support';
     hasWriteAccess: boolean;
     slug: string;
   };
@@ -32,15 +32,19 @@ const PAGE_TITLES: Record<string, string> = {
   '/audit': 'Audit Trail',
   '/settings': 'Settings',
   '/users/transfer': 'Transfer Sales Data',
+  '/support': 'Support Desk',
+  '/support/tickets': 'Support Tickets',
+  '/support/tickets/new': 'New Support Ticket',
 };
 
 const NESTED_PAGE_TITLES: Array<{ pattern: RegExp; title: string }> = [
   { pattern: /^\/doctors\/[^/]+\/edit\/?$/, title: 'Edit Doctor' },
   { pattern: /^\/doctors\/[^/]+\/?$/, title: 'Doctor Profile' },
   { pattern: /^\/visits\/[^/]+\/?$/, title: 'Visit Details' },
+  { pattern: /^\/support\/tickets\/[^/]+\/?$/, title: 'Ticket Details' },
 ];
 
-const TOP_LEVEL_PATHS = ['/dashboard', '/doctors', '/visits', '/alerts', '/reports', '/dropdowns', '/users', '/audit', '/settings'];
+const TOP_LEVEL_PATHS = ['/dashboard', '/doctors', '/visits', '/alerts', '/reports', '/dropdowns', '/users', '/audit', '/settings', '/support', '/support/tickets'];
 
 function getPageTitle(pathname: string): string {
   return PAGE_TITLES[pathname] ?? NESTED_PAGE_TITLES.find((p) => p.pattern.test(pathname))?.title ?? 'DSR CMS';

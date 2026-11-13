@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatDate, formatDateTime, daysSince, canCreateRecords } from '@/lib/utils';
+import DoctorTicketsList from '@/components/support/DoctorTicketsList';
 
-type TabKey = 'profile' | 'practice' | 'categorization' | 'opportunity' | 'competitor' | 'attachments' | 'additional' | 'visits';
+type TabKey = 'profile' | 'practice' | 'categorization' | 'opportunity' | 'competitor' | 'attachments' | 'additional' | 'visits' | 'tickets';
 
 const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'profile', label: '📋 Information' },
@@ -16,6 +17,11 @@ const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'attachments', label: '📎 Attachments' },
   { key: 'additional', label: '➕ Additional' },
   { key: 'visits', label: '📅 Visit History' },
+];
+
+const SUPPORT_TABS: Array<{ key: TabKey; label: string }> = [
+  ...TABS.filter((t) => t.key !== 'visits'),
+  { key: 'tickets', label: '🎫 Support Tickets' },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
@@ -61,7 +67,8 @@ export default function DoctorDetailPage() {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setCurrentUser(d.user); });
     Promise.all([
       fetch(`/api/doctors/${slug}`).then((r) => r.json()),
-      fetch(`/api/visits?sort=-visitDate&limit=50`).then((r) => r.json()),
+      // Support users have no visit access; treat a 403 as no visits
+      fetch(`/api/visits?sort=-visitDate&limit=50`).then((r) => (r.ok ? r.json() : { data: [] })),
     ]).then(([docData, visitsData]) => {
       setDoctor(docData.data);
       // Filter visits for this doctor (client-side since we don't have a doctor-specific visits endpoint)
@@ -72,6 +79,10 @@ export default function DoctorDetailPage() {
       setLoading(false);
     });
   }, [slug]);
+
+  const isSupport = currentUser?.role === 'support';
+  const tabs = isSupport ? SUPPORT_TABS : TABS;
+  const hasQuickStats = !isSupport || Boolean(doctor?.monthlyAlignerCases) || Boolean(doctor?.probabilityOfConversion);
 
   if (loading) {
     return (
@@ -126,6 +137,9 @@ export default function DoctorDetailPage() {
             {canCreateRecords(currentUser) && (
               <Link href={`/visits/new?doctor=${slug}`} className="btn btn-primary">+ Log Visit</Link>
             )}
+            {isSupport && (
+              <Link href={`/support/tickets/new?doctor=${slug}`} className="btn btn-primary">+ New Ticket</Link>
+            )}
             {currentUser && (currentUser.role === 'superAdmin' || (currentUser.role === 'admin' && currentUser.hasWriteAccess)) && (
               <Link href={`/doctors/${slug}/edit`} className="btn btn-secondary">Edit</Link>
             )}
@@ -133,38 +147,42 @@ export default function DoctorDetailPage() {
         </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border md:flex md:flex-wrap md:gap-6 md:mt-5 md:pt-5">
-          <div className={STAT_TILE}>
-            <div className="text-xl md:text-[22px] font-extrabold text-brand">{visits.length}</div>
-            <div className="text-xs text-text-muted">Total Visits</div>
-          </div>
-          {Boolean(doctor.monthlyAlignerCases) && (
-            <div className={STAT_TILE}>
-              <div className="text-xl md:text-[22px] font-extrabold text-success">{String(doctor.monthlyAlignerCases)}</div>
-              <div className="text-xs text-text-muted">Aligner Cases/Month</div>
-            </div>
-          )}
-          {Boolean(doctor.probabilityOfConversion) && (
-            <div className={STAT_TILE}>
-              <div className="text-xl md:text-[22px] font-extrabold text-info">{String(doctor.probabilityOfConversion)}%</div>
-              <div className="text-xs text-text-muted">Conversion Prob.</div>
-            </div>
-          )}
-          {visits.length > 0 && (
-            <div className={STAT_TILE}>
-              <div className="text-xl md:text-[22px] font-extrabold text-warning">
-                {daysSince(String((visits[0] as Record<string, unknown>).visitDate))}d
+        {hasQuickStats && (
+          <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border md:flex md:flex-wrap md:gap-6 md:mt-5 md:pt-5">
+            {!isSupport && (
+              <div className={STAT_TILE}>
+                <div className="text-xl md:text-[22px] font-extrabold text-brand">{visits.length}</div>
+                <div className="text-xs text-text-muted">Total Visits</div>
               </div>
-              <div className="text-xs text-text-muted">Days Since Last Visit</div>
-            </div>
-          )}
-        </div>
+            )}
+            {Boolean(doctor.monthlyAlignerCases) && (
+              <div className={STAT_TILE}>
+                <div className="text-xl md:text-[22px] font-extrabold text-success">{String(doctor.monthlyAlignerCases)}</div>
+                <div className="text-xs text-text-muted">Aligner Cases/Month</div>
+              </div>
+            )}
+            {Boolean(doctor.probabilityOfConversion) && (
+              <div className={STAT_TILE}>
+                <div className="text-xl md:text-[22px] font-extrabold text-info">{String(doctor.probabilityOfConversion)}%</div>
+                <div className="text-xs text-text-muted">Conversion Prob.</div>
+              </div>
+            )}
+            {visits.length > 0 && (
+              <div className={STAT_TILE}>
+                <div className="text-xl md:text-[22px] font-extrabold text-warning">
+                  {daysSince(String((visits[0] as Record<string, unknown>).visitDate))}d
+                </div>
+                <div className="text-xs text-text-muted">Days Since Last Visit</div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="card p-0">
         <div className="flex border-b border-border px-2 overflow-x-auto">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -291,6 +309,8 @@ export default function DoctorDetailPage() {
               <InfoRow label="Created At" value={formatDateTime(String(doctor.createdAt))} />
             </div>
           )}
+
+          {tab === 'tickets' && isSupport && <DoctorTicketsList doctorId={String(doctor._id)} doctorSlug={slug} />}
 
           {tab === 'visits' && (
             <div>

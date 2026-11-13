@@ -3,6 +3,21 @@ import { verifyToken } from './lib/auth';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/seed'];
 
+const SUPPORT_ROLES = ['support', 'admin', 'superAdmin'];
+const SUPPORT_USER_PAGES = ['/support', '/doctors', '/settings'];
+const SUPPORT_USER_APIS = ['/api/support', '/api/doctors', '/api/dropdowns', '/api/auth'];
+
+function matchesPrefix(pathname: string, prefixes: string[]) {
+  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+function deny(request: NextRequest, pathname: string, fallback: string) {
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  return NextResponse.redirect(new URL(fallback, request.url));
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -47,6 +62,20 @@ export async function proxy(request: NextRequest) {
   }
 
   // Route-level RBAC
+  if (user.role === 'support') {
+    const allowed = matchesPrefix(pathname, pathname.startsWith('/api/') ? SUPPORT_USER_APIS : SUPPORT_USER_PAGES);
+    if (!allowed) return deny(request, pathname, '/support');
+  }
+
+  if (matchesPrefix(pathname, ['/support', '/api/support'])) {
+    if (!SUPPORT_ROLES.includes(user.role)) return deny(request, pathname, '/dashboard');
+    const canManageTickets =
+      user.role === 'support' || user.role === 'superAdmin' || (user.role === 'admin' && user.hasWriteAccess);
+    if (pathname === '/support/tickets/new' && !canManageTickets) {
+      return NextResponse.redirect(new URL('/support/tickets', request.url));
+    }
+  }
+
   if (pathname.startsWith('/users') || pathname.startsWith('/api/users')) {
     const canAccess =
       user.role === 'superAdmin' || (user.role === 'admin' && user.hasWriteAccess);

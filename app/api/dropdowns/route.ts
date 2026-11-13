@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db';
 import { getAuthUser, canWrite } from '@/lib/auth';
 import Dropdown from '@/models/Dropdown';
 import { indianStateDropdowns } from '@/lib/indiaStates';
+import { ensureSupportDropdowns } from '@/lib/support';
 import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest) {
     await ensureReasonForNotSwitchingOptions();
     await ensureCityOptions();
     await ensureStateOptions();
+    await ensureSupportDropdowns();
 
     const { searchParams } = new URL(request.url);
     const group = searchParams.get('group') || '';

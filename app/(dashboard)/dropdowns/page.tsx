@@ -34,6 +34,8 @@ const GROUP_LABELS: Record<string, string> = {
   reasonForNotSwitching: 'Reason for Not Switching',
   city: 'Cities',
   state: 'States',
+  supportReason: 'Support Reasons',
+  supportStatus: 'Support Statuses',
 };
 
 export default function DropdownsPage() {
